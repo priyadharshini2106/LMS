@@ -1,0 +1,425 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exam Marks{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Exam Marks</li>
+{% endblock %}
+
+{% block card_title %}Exam Marks Management{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --ink:#0f172a; --muted:#6b7280; --line:#e5e7eb; --ok:#16a34a; --bad:#dc2626;
+    --brand:#2563eb; --head:#0b1220; --wrap-bg:#fff;
+  }
+
+  /* Toolbar */
+  .marks-toolbar{display:flex;gap:.5rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .marks-toolbar .filter-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+
+  /* Scrollable viewport */
+  .scroll-viewport{
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:auto;
+    background:var(--wrap-bg);
+    box-shadow:0 8px 22px rgba(2,6,23,.06), 0 3px 10px rgba(2,6,23,.04);
+    max-height:66vh;
+  }
+
+  /* Table (2 columns) */
+  .marks-table{width:100%; min-width:820px; border-collapse:separate; border-spacing:0; font-size:.9rem}
+  .marks-table thead th{
+    position:sticky; top:0; z-index:2;
+    background:linear-gradient(180deg,var(--head) 0%, #14213d 100%);
+    color:#fff; font-weight:800; border-bottom:0; padding:10px 10px;
+    letter-spacing:.25px; text-transform:uppercase; font-size:.78rem;
+  }
+  .marks-table tbody td{padding:10px; vertical-align:top; border-top:1px solid #f1f5f9}
+  .marks-table tbody tr:nth-child(even){background:#fafafa}
+  .marks-table tbody tr:hover{background:#f8fafc}
+
+  /* ---- Labels & badges ---- */
+  .label{
+    font-size:.72rem; font-weight:800; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.04em; margin-right:.35rem;
+    white-space:nowrap;
+  }
+  .field-row{display:flex; align-items:center; gap:.4rem; flex-wrap:wrap}
+
+  .term-title{margin-bottom:.35rem}
+  .term-badge{
+    display:inline-flex; align-items:center; gap:.35rem;
+    background:#0b1220; color:#fff;
+    padding:.22rem .6rem; border-radius:999px;
+    font-weight:900; font-size:.72rem; letter-spacing:.02em;
+    box-shadow:0 4px 10px rgba(2,6,23,.15);
+  }
+  .term-badge .dot{
+    display:inline-block; width:.4rem; height:.4rem; border-radius:999px; background:#22c55e;
+  }
+
+  /* Left column (Student) */
+  .student-col{width: 26%; max-width: 360px}
+  .student-card{display:flex;flex-direction:column;gap:.35rem}
+  .student-name{font-weight:900;color:var(--ink)}
+  .roll-pill{
+    display:inline-flex;align-items:center;justify-content:center;padding:.18rem .45rem;border-radius:999px;
+    font-size:.7rem;background:#eef2ff;color:#1e3a8a;border:1px solid #e0e7ff
+  }
+  .class-chip{
+    display:inline-flex;align-items:center;padding:.15rem .45rem;border-radius:8px;font-weight:700;
+    font-size:.72rem;background:#f1f5ff;border:1px solid #e5edff;color:#1c3faa;width:max-content
+  }
+
+  /* Right column (Terms grouped, then Subjects) */
+  .stack-col{width:74%}
+
+  .term-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.75rem}
+  .term-block{border:1px dashed #e2e8f0;border-radius:12px;padding:.6rem .7rem;background:#fff}
+
+  .subject-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.5rem}
+  .subject-row{display:grid;grid-template-columns:minmax(130px,1.2fr) minmax(220px,2fr) auto auto auto;gap:.6rem;align-items:center}
+  .stack-title{font-weight:800;color:var(--ink)}
+  .stack-meta{font-size:.82rem; color:var(--muted)}
+  .meta-dot::before{content:'•'; margin:0 .4rem; color:#cbd5e1}
+
+  /* Marks bar (compact) */
+  .marks-box{min-width:220px}
+  .progress{background:#eef2f7;height:8px;border-radius:999px;overflow:hidden}
+  .progress-bar{height:100%;background:var(--brand)}
+  .progress-bar.pass{background:var(--ok)}
+  .progress-bar.fail{background:var(--bad)}
+  .marks-text{font-weight:800;margin-left:.5rem}
+  .marks-text.pass{color:#14532d}
+  .marks-text.fail{color:#7f1d1d}
+  .pct-note{font-size:.78rem;color:var(--muted)}
+
+  /* Pills */
+  .pill{display:inline-flex;align-items:center;padding:.15rem .5rem;border-radius:999px;font-weight:800;font-size:.75rem;border:1px solid transparent;white-space:nowrap}
+  .pill.pass{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+  .pill.fail{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+  .pill.verified{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+  .pill.pending{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
+
+  /* Actions compact */
+  .actions .btn{padding:.25rem .55rem;font-weight:700}
+  .actions .btn-outline-primary{border-radius:10px}
+  .pagination .page-link{border-radius:10px;margin:0 .125rem}
+
+  /* Flash toast */
+  .flash{position:fixed;right:16px;top:16px;background:var(--ok);color:#fff;padding:10px 14px;border-radius:10px;
+         box-shadow:0 10px 20px rgba(0,0,0,.12);z-index:1055;opacity:0;transform:translateY(-8px);transition:.25s}
+  .flash.show{opacity:1;transform:translateY(0)}
+
+  /* Modal */
+  .modal-backdrop-custom{position:fixed;inset:0;background:rgba(2,6,23,.6);display:none;align-items:center;justify-content:center;z-index:1050}
+  .modal-backdrop-custom.show{display:flex}
+  .modal-card{width:min(520px,92vw);background:#fff;border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:hidden;border:1px solid var(--line)}
+  .modal-head{padding:14px 16px;background:var(--head);color:#fff;font-weight:900}
+  .modal-body{padding:16px;color:var(--ink)}
+  .modal-actions{display:flex;gap:.5rem;justify-content:flex-end;padding:12px 16px;background:#f8fafc;border-top:1px solid var(--line)}
+  .btn-soft{background:#e5e7eb;border:1px solid #d1d5db;color:#111827;border-radius:10px;padding:8px 12px;font-weight:800}
+  .btn-brand{background:var(--brand);border:1px solid #1d4ed8;color:#fff;border-radius:10px;padding:8px 14px;font-weight:900}
+  .btn-brand[disabled]{opacity:.6;pointer-events:none}
+
+  @media (max-width: 720px){
+    .marks-text{display:none}
+    .marks-box{min-width:180px}
+    .student-col{width: 40%}
+    .stack-col{width: 60%}
+    .subject-row{grid-template-columns:1fr minmax(140px,2fr) auto}
+  }
+</style>
+
+<div id="flashTop" class="flash" role="status" aria-live="polite"></div>
+
+<div class="marks-toolbar mb-2">
+  <form method="get" class="filter-row">
+    <select name="term" class="form-select form-select-sm">
+      <option value="">All Terms</option>
+      {% for term in terms %}
+        <option value="{{ term.id }}" {% if selected_term == term.id %}selected{% endif %}>{{ term.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+  </form>
+
+  <a class="btn btn-sm btn-primary" href="{% url 'exams:add_exam_mark' %}">+ Add Exam Mark</a>
+</div>
+
+<div class="scroll-viewport" id="tableWrap">
+  <table class="marks-table table align-middle">
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Terms · Subjects · Class · Marks</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if marks %}
+        {# Group all marks by student so each student appears once #}
+        {% regroup marks by student as student_groups %}
+        {% for group in student_groups %}
+          <tr>
+            <td class="student-col">
+              <div class="student-card">
+                <div class="field-row">
+                  <span class="label">Student</span>
+                  <span class="student-name">{{ group.grouper.name }}</span>
+                </div>
+                <div class="field-row">
+                  <span class="label">Roll&nbsp;No</span>
+                  <span class="roll-pill">{{ group.grouper.roll_no|default:"—" }}</span>
+                </div>
+                <div class="field-row">
+                  <span class="label">Class</span>
+                  {% if group.grouper.class_section %}
+                    <span class="class-chip">{{ group.grouper.class_section }}</span>
+                  {% elif group.grouper.class_level %}
+                    <span class="class-chip">{{ group.grouper.class_level }}</span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </div>
+
+                {# Marksheet buttons #}
+                <div class="mt-2 d-flex gap-1 flex-wrap">
+                  <a class="btn btn-sm btn-outline-secondary"
+                     href="{% url 'exams:student_marksheet' group.grouper.id %}"
+                     target="_blank" rel="noopener">
+                    Marksheet
+                  </a>
+                  <a class="btn btn-sm btn-outline-primary"
+                     href="{% url 'exams:student_marksheet' group.grouper.id %}?format=pdf"
+                     target="_blank" rel="noopener">
+                    PDF
+                  </a>
+                </div>
+              </div>
+            </td>
+
+            <td class="stack-col">
+              {# Group this student's marks by term #}
+              {% regroup group.list by term as term_groups %}
+              <ul class="term-list">
+                {% for tg in term_groups %}
+                  <li class="term-block">
+                    <div class="term-title">
+                      <span class="term-badge"><span class="dot"></span> Term: {{ tg.grouper.name }}</span>
+                    </div>
+
+                    <ul class="subject-list">
+                      {% for mark in tg.list %}
+                        {% widthratio mark.marks_obtained|default:0 mark.max_marks|default:100 100 as pct %}
+                        <li class="subject-row" data-row-id="{{ mark.pk }}">
+                          {# Subject #}
+                          <div class="stack-title">{{ mark.subject.name }}</div>
+
+                          {# Marks #}
+                          <div class="marks-box flex-grow-1">
+                            <div class="d-flex align-items-center">
+                              <div class="progress flex-grow-1">
+                                <div class="progress-bar {% if mark.marks_obtained|default:0 >= 35 %}pass{% else %}fail{% endif %}"
+                                     style="width: {{ pct }}%;"></div>
+                              </div>
+                              <span class="marks-text {% if mark.marks_obtained|default:0 >= 35 %}pass{% else %}fail{% endif %}">
+                                {{ mark.marks_obtained }} / {{ mark.max_marks }}
+                              </span>
+                            </div>
+                            <div class="pct-note mt-1">{{ pct|floatformat:0 }}%</div>
+                          </div>
+
+                          {# Result #}
+                          <div>
+                            {% if mark.marks_obtained|default:0 >= 35 %}
+                              <span class="pill pass">Pass</span>
+                            {% else %}
+                              <span class="pill fail">Fail</span>
+                            {% endif %}
+                          </div>
+
+                          {# Verified #}
+                          <div>
+                            {% if mark.markentryverification %}
+                              <span class="pill verified">✔ Verified</span>
+                            {% else %}
+                              <span class="pill pending">⏳ Pending</span>
+                            {% endif %}
+                          </div>
+
+                          {# Actions #}
+                          <div class="actions btn-group btn-group-sm">
+                            <a class="btn btn-outline-primary" href="{% url 'exams:edit_exam_mark' mark.pk %}">Edit</a>
+
+                            {% if is_admin and not mark.markentryverification %}
+                              <button type="button"
+                                      class="btn btn-primary verify-btn"
+                                      data-student="{{ group.grouper.name }}"
+                                      data-subject="{{ mark.subject.name }}"
+                                      data-verify-url="{% url 'exams:verify_exam_mark' mark.pk %}">
+                                Verify
+                              </button>
+                            {% endif %}
+
+                            <button type="button"
+                                    class="btn btn-outline-danger delete-btn"
+                                    data-delete-url="{% url 'exams:delete_exam_mark' mark.pk %}">
+                              Delete
+                            </button>
+                          </div>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endfor %}
+              </ul>
+            </td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="2" class="text-center text-muted py-4">No exam marks found</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Page navigation" class="mt-2">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_term %}&term={{ selected_term }}{% endif %}">Previous</a>
+      </li>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+        <a class="page-link" href="?page={{ num }}{% if selected_term %}&term={{ selected_term }}{% endif %}">{{ num }}</a>
+      </li>
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_term %}&term={{ selected_term }}{% endif %}">Next</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{# Verify Modal (no Bootstrap JS needed) #}
+<div id="verifyModal" class="modal-backdrop-custom" role="dialog" aria-modal="true" aria-labelledby="verifyTitle" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head" id="verifyTitle">Confirm Verification</div>
+    <div class="modal-body">
+      <div id="verifyMessage">Are you sure you want to verify this mark?</div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-soft" data-close-modal>Cancel</button>
+      <button type="button" class="btn-brand" id="confirmVerifyBtn">Yes, Verify</button>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+(function() {
+  const csrftoken = '{{ csrf_token }}';
+  const IS_ADMIN = {{ is_admin|yesno:'true,false' }};
+
+  const wrap = document.getElementById('tableWrap');
+  if (wrap) wrap.addEventListener('scroll', () => wrap.classList.toggle('scrolling', wrap.scrollTop > 0));
+
+  function post(url, payload) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' },
+      body: payload instanceof FormData ? payload : new URLSearchParams(payload || {})
+    }).then(async (r) => {
+      let data = {};
+      try { data = await r.json(); } catch (_e) {}
+      return { status: r.status, json: data };
+    });
+  }
+
+  const flashEl = document.getElementById('flashTop');
+  function showFlash(msg, ok=true) {
+    if (!flashEl) return;
+    flashEl.textContent = msg || (ok ? 'Done.' : 'Something went wrong.');
+    flashEl.style.background = ok ? '#16a34a' : '#dc2626';
+    flashEl.classList.add('show');
+    setTimeout(()=> flashEl.classList.remove('show'), 2200);
+  }
+
+  const modal = document.getElementById('verifyModal');
+  const confirmBtn = document.getElementById('confirmVerifyBtn');
+  const msgBox = document.getElementById('verifyMessage');
+  let pendingVerifyUrl = null;
+
+  function openModal(message, verifyUrl) {
+    pendingVerifyUrl = verifyUrl;
+    msgBox.textContent = message || 'Are you sure you want to verify this mark?';
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    confirmBtn.focus();
+  }
+  function closeModal() {
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    pendingVerifyUrl = null;
+  }
+  modal.addEventListener('click', (e) => { if (e.target === modal || e.target.hasAttribute('data-close-modal')) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('show')) closeModal(); });
+
+  document.addEventListener('click', function(e) {
+    const verifyBtn = e.target.closest('.verify-btn');
+    if (verifyBtn) {
+      if (!IS_ADMIN) { showFlash('Only admins can verify marks.', false); return; }
+      const url = verifyBtn.dataset.verifyUrl;
+      const student = verifyBtn.dataset.student || 'this student';
+      const subject = verifyBtn.dataset.subject || 'this subject';
+      openModal(`Verify the mark entry for ${student} — ${subject}?`, url);
+    }
+
+    const delBtn = e.target.closest('.delete-btn');
+    if (delBtn) {
+      const url = delBtn.dataset.deleteUrl;
+      if (!url) return;
+      if (!confirm('Delete this exam mark? This cannot be undone.')) return;
+      post(url).then(({ status, json }) => {
+        if (status === 200 && (json.ok === true || !json.ok)) {
+          showFlash(json.message || 'Deleted.');
+          setTimeout(()=> location.reload(), 600);
+        } else {
+          showFlash((json && json.message) || 'Failed to delete.', false);
+        }
+      }).catch(() => showFlash('Network error.', false));
+    }
+  });
+
+  confirmBtn.addEventListener('click', function() {
+    const url = pendingVerifyUrl;
+    if (!url) return;
+    confirmBtn.disabled = true;
+    post(url).then(({ status, json }) => {
+      confirmBtn.disabled = false;
+      if (status === 200 && (json.ok === true || !json.ok)) {
+        closeModal();
+        showFlash(json.message || 'Mark verified.');
+        setTimeout(()=> location.reload(), 600);
+      } else {
+        showFlash((json && json.message) || 'Failed to verify.', false);
+      }
+    }).catch(() => {
+      confirmBtn.disabled = false;
+      showFlash('Network error.', false);
+    });
+  });
+})();
+</script>
+{% endblock %}
+{% endblock %}

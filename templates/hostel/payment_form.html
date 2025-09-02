@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{% if view.object %}Edit Payment{% else %}Add Payment{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+  html, body { height: 100%; }
+  body { background: transparent !important; }
+  body::before{
+    content:""; position: fixed; inset: 0;
+    background: url("{% static 'images/bg-wave.png' %}") center/cover no-repeat fixed;
+    z-index: -1;
+  }
+
+  :root{
+    --lav-strong:#7c3aed;
+    --ink:#14121a;
+    --muted:#3f3f46;
+  }
+
+  .form-shell{ max-width: 800px; margin: 22px auto 32px; padding: 0 18px; }
+  .page-title{ font-weight: 800; font-size: 2rem; color: var(--ink); display:flex; gap:.55rem; margin-bottom: 14px; }
+
+  .form-pane{
+    background: rgba(255,255,255,.70);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(233,213,255,.55);
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(124,58,237,.12);
+    padding: 22px;
+  }
+
+  .field{ margin-bottom: 18px; }
+  .field label{
+    display:block;
+    font-weight:800;
+    color:var(--muted);
+    margin: 2px 0 6px 2px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea{
+    width:100%;
+    background: transparent;
+    border:none;
+    border-bottom: 2px solid rgba(0,0,0,.18);
+    padding: 10px 6px 8px 2px;
+    font-size: 1.06rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    border-radius: 8px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-bottom-color: var(--lav-strong);
+    background: rgba(255,255,255,.25);
+    box-shadow: 0 8px 24px rgba(124,58,237,.10);
+  }
+
+  .error{ color:#b91c1c; font-weight:700; font-size:.92rem; margin-top:6px; }
+  .alert-danger{
+    background:#fee2e2; border:1px solid #fecaca; color:#991b1b;
+    padding:.75rem 1rem; border-radius:12px; font-weight:700; margin-bottom:1rem;
+  }
+
+  .actions{ margin-top: 22px; display:flex; gap: 12px; justify-content:center; flex-wrap:wrap; }
+  .btnx{ display:inline-block; padding:.9rem 1.6rem; border-radius:14px; font-weight:800; text-decoration:none !important; border:1px solid transparent; transition: all .18s ease; }
+  .btn-primaryx{ background: linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; box-shadow: 0 10px 22px rgba(124,58,237,.22); }
+  .btn-primaryx:hover{ background:#5b21b6; color:#fff; transform: translateY(-1px); }
+  .btn-cancelx{ background:#fff; color:#6b7280; border:1px solid rgba(0,0,0,.12); }
+  .btn-cancelx:hover{ background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+</style>
+
+<div class="form-shell">
+  <h2 class="page-title">
+    {% if view.object %}✏️ Edit Payment{% else %}💵 Add Payment{% endif %}
+  </h2>
+
+  <form method="post" class="form-pane" novalidate>
+    {% csrf_token %}
+
+    <!-- Student -->
+    <div class="field">
+      <label for="{{ form.student.id_for_label|default:'id_student' }}">Student</label>
+      {{ form.student }}
+      {% if form.student.errors %}
+        <div class="error">{{ form.student.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Hostel -->
+    <div class="field">
+      <label for="{{ form.hostel.id_for_label|default:'id_hostel' }}">Hostel</label>
+      {{ form.hostel }}
+      {% if form.hostel.errors %}
+        <div class="error">{{ form.hostel.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Amount -->
+    <div class="field">
+      <label for="{{ form.amount.id_for_label|default:'id_amount' }}">Amount</label>
+      {{ form.amount }}
+      {% if form.amount.errors %}
+        <div class="error">{{ form.amount.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Payment Date -->
+    <div class="field">
+      <label for="{{ form.payment_date.id_for_label|default:'id_payment_date' }}">Payment Date</label>
+      {{ form.payment_date }}
+      {% if form.payment_date.errors %}
+        <div class="error">{{ form.payment_date.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Method (Dropdown) -->
+    <div class="field">
+      <label for="{{ form.method.id_for_label|default:'id_method' }}">Method</label>
+      {{ form.method }}
+      {% if form.method.errors %}
+        <div class="error">{{ form.method.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Receipt No -->
+    <div class="field">
+      <label for="{{ form.receipt_no.id_for_label|default:'id_receipt_no' }}">Receipt No</label>
+      {{ form.receipt_no }}
+      {% if form.receipt_no.errors %}
+        <div class="error">{{ form.receipt_no.errors }}</div>
+      {% endif %}
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btnx btn-primaryx">Save Payment</button>
+      <a href="{% url 'hostel:payment_list' %}" class="btnx btn-cancelx">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<!-- Optional external JS -->
+<script src="{% static 'js/script.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if view.object %}Edit Outpass{% else %}New Outpass{% endif %} | Periyanachi ERP{% endblock %}
+
+{% block content %}
+<style>
+  html, body { height:100%; }
+  body { background: transparent !important; }
+  body::before{
+    content:""; position: fixed; inset: 0;
+    background: url("{% static 'images/bg-wave.png' %}") center/cover no-repeat fixed;
+    z-index: -1;
+  }
+
+  :root{
+    --lav-strong:#7c3aed;
+    --ink:#14121a;
+    --muted:#3f3f46;
+  }
+
+  .form-shell{ max-width: 1100px; margin: 22px auto 32px; padding: 0 18px; }
+  .page-title{ font-weight: 800; font-size: 2rem; color: var(--ink); display:flex; gap:.55rem; margin-bottom: 14px; }
+
+  .form-pane{
+    background: rgba(255,255,255,.70);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(233,213,255,.55);
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(124,58,237,.12);
+    padding: 22px;
+  }
+
+  .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 18px 22px; }
+  @media (max-width: 840px){ .grid-2{ grid-template-columns: 1fr; } }
+
+  .field{ position: relative; }
+  .field label{
+    display:block;
+    font-weight:800;
+    color:var(--muted);
+    margin: 2px 0 6px 2px;
+  }
+
+  /* inputs */
+  .form-control, .form-select{
+    width:100%;
+    background: transparent;
+    border:none;
+    border-bottom: 2px solid rgba(0,0,0,.18);
+    padding: 10px 6px 8px 2px;
+    font-size: 1.06rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    border-radius: 8px;
+  }
+  .form-control:focus, .form-select:focus{
+    border-bottom-color: var(--lav-strong);
+    background: rgba(255,255,255,.25);
+    box-shadow: 0 8px 24px rgba(124,58,237,.10);
+  }
+
+  /* compact textarea: like other inputs */
+  textarea.form-control{
+    min-height: 80px;
+    max-height: 150px;
+    resize: vertical;
+  }
+
+  .helptext{ display:block; font-size:.85rem; color:#6b7280; margin-top:4px; }
+  .errorlist, .text-danger{ list-style:none; margin:.35rem 0 0; padding:0; color:#b91c1c; font-weight:700; font-size:.92rem; }
+
+  .actions{ margin-top: 22px; display:flex; gap: 12px; justify-content:center; flex-wrap:wrap; }
+  .btnx{ display:inline-block; padding:.9rem 1.6rem; border-radius:14px; font-weight:800; text-decoration:none !important; border:1px solid transparent; transition: all .18s ease; }
+  .btn-primaryx{ background: linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; box-shadow: 0 10px 22px rgba(124,58,237,.22); }
+  .btn-primaryx:hover{ background:#5b21b6; color:#fff; transform: translateY(-1px); }
+  .btn-cancelx{ background:#fff; color:#6b7280; border:1px solid rgba(0,0,0,.12); }
+  .btn-cancelx:hover{ background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+
+  /* tiny toast for success messages */
+  .toastx{
+    position: fixed; right: 16px; bottom: 16px; z-index: 1060;
+    background: #10b981; color: #fff; padding: .75rem 1rem; border-radius: 12px;
+    box-shadow: 0 10px 22px rgba(0,0,0,.2); font-weight: 800;
+    display: none;
+  }
+  .toastx.show{ display:block; }
+</style>
+
+<div class="form-shell">
+  <h2 class="page-title">
+    {% if view.object %}✏️ Edit Outpass{% else %}🧳 New Outpass{% endif %}
+  </h2>
+
+  <form method="post" class="form-pane" novalidate>
+    {% csrf_token %}
+
+    <div class="grid-2">
+      <!-- Student -->
+      <div class="field">
+        <label>Student</label>
+        {{ form.student }}
+        {% if form.student.errors %}<div class="text-danger small">{{ form.student.errors }}</div>{% endif %}
+      </div>
+
+      <!-- Status -->
+      <div class="field">
+        <label>Status</label>
+        {{ form.status }}
+        <small class="helptext">Choose Pending / Approved / Rejected</small>
+        {% if form.status.errors %}<div class="text-danger small">{{ form.status.errors }}</div>{% endif %}
+      </div>
+
+      <!-- Reason -->
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>Reason</label>
+        {{ form.reason }}
+        {% if form.reason.errors %}<div class="text-danger small">{{ form.reason.errors }}</div>{% endif %}
+      </div>
+
+      <!-- Start -->
+      <div class="field">
+        <label>Start Date &amp; Time</label>
+        {{ form.start_date }}
+        {% if form.start_date.errors %}<div class="text-danger small">{{ form.start_date.errors }}</div>{% endif %}
+      </div>
+
+      <!-- End -->
+      <div class="field">
+        <label>End Date &amp; Time</label>
+        {{ form.end_date }}
+        {% if form.end_date.errors %}<div class="text-danger small">{{ form.end_date.errors }}</div>{% endif %}
+      </div>
+
+      <!-- Approved (checkbox) -->
+      {% if form.approved %}
+      <div class="field">
+        <label class="form-check-label" style="display:block; margin-bottom:6px;">Approved</label>
+        <div class="form-check">
+          {{ form.approved }}
+        </div>
+        {% if form.approved.errors %}<div class="text-danger small">{{ form.approved.errors }}</div>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btnx btn-primaryx">
+        💾 Save
+      </button>
+      <a href="{% url 'hostel:outpass_list' %}" class="btnx btn-cancelx">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="toastx" id="toastx">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<script>
+  (function(){
+    const toast = document.getElementById('toastx');
+    if (toast) {
+      toast.classList.add('show');
+      setTimeout(()=>{ toast.classList.remove('show'); }, 2000);
+      // Optional: after save, redirect back to list a bit faster
+      // setTimeout(()=>{ window.location.href = "{% url 'hostel:outpass_list' %}"; }, 1200);
+    }
+  })();
+</script>
+{% endblock %}

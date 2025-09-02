@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --sidebar-width: 250px;
+            --header-height: 70px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            color: white;
+            height: 100vh;
+            position: fixed;
+            transition: var(--transition);
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h3 {
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .sidebar-menu {
+            padding: 10px 0;
+        }
+
+        .menu-category {
+            padding: 10px 20px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+            cursor: pointer;
+            border-left: 4px solid transparent;
+            color: white;
+            text-decoration: none;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--success);
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-left: 4px solid white;
+        }
+
+        .menu-item i {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: var(--transition);
+        }
+
+        /* Header Styles */
+        .header {
+            height: var(--header-height);
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* Content Styles */
+        .content {
+            padding: 30px;
+        }
+
+        .welcome-section {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+
+        .welcome-section h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .dashboard-item {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--dark);
+        }
+
+        .dashboard-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-wrapper {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 20px;
+        }
+
+        .students-icon { background-color: rgba(76, 201, 240, 0.2); color: #4cc9f0; }
+        .staff-icon { background-color: rgba(247, 127, 83, 0.2); color: #f77f53; }
+        .attendance-icon { background-color: rgba(106, 176, 76, 0.2); color: #6ab04c; }
+        .fees-icon { background-color: rgba(245, 59, 87, 0.2); color: #f53b57; }
+        .exams-icon { background-color: rgba(159, 90, 253, 0.2); color: #9f5afd; }
+        .events-icon { background-color: rgba(247, 203, 71, 0.2); color: #f7cb47; }
+        .timetable-icon { background-color: rgba(0, 184, 148, 0.2); color: #00b894; }
+        .library-icon { background-color: rgba(253, 114, 114, 0.2); color: #fd7272; }
+        .reports-icon { background-color: rgba(72, 52, 212, 0.2); color: #4834d4; }
+        .certificates-icon { background-color: rgba(9, 132, 227, 0.2); color: #0984e3; }
+        .profile-icon { background-color: rgba(108, 92, 231, 0.2); color: #6c5ce7; }
+        /* Hostel icon */
+        .hostel-icon { background-color: rgba(16, 172, 132, 0.2); color: #10ac84; }
+
+        .item-content { flex: 1; }
+        .item-content h3 { font-size: 16px; margin-bottom: 5px; text-decoration: none; }
+        .item-content p { font-size: 13px; color: var(--gray); text-decoration: none; }
+
+        .logout-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 25px;
+            background-color: #ff6b6b;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 3px 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .logout-btn:hover {
+            background-color: #ee5253;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); width: 0; }
+            .sidebar.active { transform: translateX(0); width: var(--sidebar-width); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>Periyanachi LMS</h3>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-category">Main Navigation</div>
+
+                <a href="#" class="menu-item active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="menu-category">Management</div>
+
+                <a href="/students/" class="menu-item">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Students</span>
+                </a>
+
+                <a href="/staff/" class="menu-item">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Staff</span>
+                </a>
+
+                <a href="{% url 'student_attendance_dashboard' %}" class="menu-item">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Attendance</span>
+                </a>
+
+                <a href="/fees/" class="menu-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Fees</span>
+                </a>
+
+                <!-- Hostel (namespaced) -->
+                <a href="{% url 'hostel:dashboard' %}" class="menu-item">
+                    <i class="fas fa-bed"></i>
+                    <span>Hostel</span>
+                </a>
+
+                <a href="/exams/" class="menu-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Exams</span>
+                </a>
+
+                <div class="menu-category">Resources</div>
+
+                <a href="/events/" class="menu-item">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Events</span>
+                </a>
+
+                <a href="{% url 'timetable_list' %}" class="menu-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Timetable</span>
+                </a>
+
+                <a href="/library/" class="menu-item">
+                    <i class="fas fa-book"></i>
+                    <span>Library</span>
+                </a>
+
+                <a href="/reports/" class="menu-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+
+                <a href="/certificates/transfer/1/" class="menu-item">
+                    <i class="fas fa-certificate"></i>
+                    <span>Certificates</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="user-info">
+                    <div class="user-avatar">{{ request.user.first_name|first }}{{ request.user.last_name|first }}</div>
+                    <div>
+                        <div style="font-size: 18px; color: var(--dark);">{{ request.user.first_name }} {{ request.user.username }}</div>
+                        <div style="font-size: 12px; color: var(--gray);">Administrator</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <div class="welcome-section">
+                    <h1>Welcome back, {{ request.user.first_name }}!</h1>
+                    <p>Here's what's happening with your institution today.</p>
+                </div>
+
+                <div class="dashboard-grid">
+                    <a href="/students/" class="dashboard-item">
+                        <div class="icon-wrapper students-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Students</h3>
+                            <p>Manage student records and information</p>
+                        </div>
+                    </a>
+
+                    <a href="/staff/" class="dashboard-item">
+                        <div class="icon-wrapper staff-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Staff</h3>
+                            <p>View and manage staff members</p>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'student_attendance_dashboard' %}" class="dashboard-item">
+                        <div class="icon-wrapper attendance-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Student Attendance</h3>
+                            <p>Track and manage student attendance</p>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'staff_attendance_dashboard' %}" class="dashboard-item">
+                        <div class="icon-wrapper attendance-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Staff Attendance</h3>
+                            <p>Track and manage staff attendance</p>
+                        </div>
+                    </a>
+
+                    <a href="/fees/" class="dashboard-item">
+                        <div class="icon-wrapper fees-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Fees</h3>
+                            <p>Manage fee collections and records</p>
+                        </div>
+                    </a>
+
+                    <!-- Hostel (namespaced) -->
+                    <a href="{% url 'hostel:dashboard' %}" class="dashboard-item">
+                        <div class="icon-wrapper hostel-icon">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Hostel</h3>
+                            <p>Manage hostels, rooms, beds & allotments</p>
+                        </div>
+                    </a>
+
+                    <a href="/exams/" class="dashboard-item">
+                        <div class="icon-wrapper exams-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Exams</h3>
+                            <p>Schedule and manage examinations</p>
+                        </div>
+                    </a>
+
+                    <a href="/events/" class="dashboard-item">
+                        <div class="icon-wrapper events-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Events</h3>
+                            <p>Create and manage institutional events</p>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'timetable_list' %}" class="dashboard-item">
+                        <div class="icon-wrapper timetable-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Timetable</h3>
+                            <p>View and manage class schedules</p>
+                        </div>
+                    </a>
+
+                    <a href="/library/" class="dashboard-item">
+                        <div class="icon-wrapper library-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Library</h3>
+                            <p>Manage library resources and records</p>
+                        </div>
+                    </a>
+
+                    <a href="/reports/" class="dashboard-item">
+                        <div class="icon-wrapper reports-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Reports</h3>
+                            <p>Generate institutional reports</p>
+                        </div>
+                    </a>
+
+                    <a href="/certificates/transfer/1/" class="dashboard-item">
+                        <div class="icon-wrapper certificates-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>TC Certificate</h3>
+                            <p>Generate transfer certificates</p>
+                        </div>
+                    </a>
+
+                    <a href="/certificates/bonafide/1/" class="dashboard-item">
+                        <div class="icon-wrapper certificates-icon">
+                            <i class="fas fa-file-certificate"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Bonafide Certificate</h3>
+                            <p>Generate bonafide certificates</p>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'view_profile' %}" class="dashboard-item">
+                        <div class="icon-wrapper profile-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>My Profile</h3>
+                            <p>View and edit your profile</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div style="text-align: center;">
+                    <a href="/logout/" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple JavaScript for sidebar active state
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

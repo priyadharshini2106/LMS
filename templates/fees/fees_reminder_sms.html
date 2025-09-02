@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Fees Reminder SMS{% endblock %}
+
+{% block content %}
+<style>
+  :root{--ink:#0f172a;--sub:#64748b;--line:#e2e8f0;--soft:#f8fafc;--card:#fff;--ok:#16a34a;--warn:#f59e0b;--shadow:0 8px 20px rgba(2,6,23,.06);}
+  .page{max-width:1100px;margin:20px auto;padding:0 12px;}
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .title{margin:0;color:var(--ink);font-weight:800;}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .filters select,.filters input{padding:8px 10px;border:1px solid var(--line);border-radius:10px;outline:0;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--ink);color:#fff;text-decoration:none;font-weight:600;border:0;cursor:pointer;box-shadow:var(--shadow);}
+  .btn.secondary{background:#334155;}
+  .btn.success{background:var(--ok);}
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+  @media (max-width:1100px){.grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:720px){.grid{grid-template-columns:1fr;} }
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;}
+  .row-top{display:flex;justify-content:space-between;gap:10px;}
+  .name{font-weight:800;color:var(--ink);}
+  .small{font-size:12.5px;color:var(--sub);}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{background:var(--soft);border:1px dashed var(--line);padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;}
+  .chip.warn{background:#fef3c7;border-color:#fde68a;color:#92400e;}
+  .composer{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px 14px;margin:14px 0;}
+  textarea{width:100%;min-height:110px;border:1px solid var(--line);border-radius:12px;padding:10px;outline:0;}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px;}
+  .tag{background:#e0f2fe;border:1px solid #bae6fd;color:#075985;padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer;}
+  .bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px;}
+  .muted{color:var(--sub);font-size:12.5px;}
+  .select-all{display:flex;align-items:center;gap:8px;margin:10px 0;}
+  .empty{background:var(--soft);border:2px dashed var(--line);border-radius:16px;padding:18px;text-align:center;color:var(--sub);}
+</style>
+
+<div class="page">
+  <div class="header">
+    <h4 class="title">📨 Fees Reminder SMS</h4>
+    <a class="btn secondary" href="{% url 'fees:student_fee_assignment_list' %}">↩ Back to Assignments</a>
+  </div>
+
+  <form method="get" class="filters">
+    <select name="academic_year">
+      <option value="">Academic Year (All)</option>
+      {% for ay in academic_years %}
+        <option value="{{ ay.id }}" {% if request.GET.academic_year == ay.id|stringformat:'s' %}selected{% endif %}>{{ ay.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="class_name">
+      <option value="">Class (All)</option>
+      {% for cs in class_sections|dictsort:"class_name" %}
+        <option value="{{ cs.class_name }}" {% if request.GET.class_name == cs.class_name %}selected{% endif %}>{{ cs.class_name }}</option>
+      {% endfor %}
+    </select>
+    <select name="section">
+      <option value="">Section (All)</option>
+      {% for cs in class_sections %}
+        <option value="{{ cs.section }}" {% if request.GET.section == cs.section %}selected{% endif %}>{{ cs.section }}</option>
+      {% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search name / admission / phone" />
+    <button class="btn" type="submit">Filter</button>
+  </form>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="composer">
+      <div class="small" style="margin-bottom:6px;">Message to send</div>
+      <textarea id="msg" name="message" placeholder="Type your reminder...">{{ default_template }}</textarea>
+
+      <div class="tags">
+        <span class="tag" data-token="{name}">{name}</span>
+        <span class="tag" data-token="{admission_no}">{admission_no}</span>
+        <span class="tag" data-token="{roll_no}">{roll_no}</span>
+        <span class="tag" data-token="{class}">{class}</span>
+        <span class="tag" data-token="{section}">{section}</span>
+        <span class="tag" data-token="{balance}">{balance}</span>
+        <span class="tag" data-token="{school}">{school}</span>
+      </div>
+
+      <div class="bar">
+        <div class="muted">
+          Length: <span id="len">0</span> chars
+          &nbsp;•&nbsp; Selected: <span id="sel">0</span>
+        </div>
+        <button class="btn success" type="submit">Send SMS to selected</button>
+      </div>
+    </div>
+
+    {% if rows %}
+      <div class="select-all">
+        <label><input type="checkbox" id="checkall"> Select all ({{ rows|length }})</label>
+      </div>
+
+      <div class="grid" id="cards">
+        {% for r in rows %}
+          <label class="card">
+            <div class="row-top">
+              <div>
+                <div class="name">{{ r.student__name }}</div>
+                <div class="small">
+                  {{ r.student__class_section__class_name }} - {{ r.student__class_section__section }}
+                  &nbsp;•&nbsp; Adm: {{ r.student__admission_number }} &nbsp;•&nbsp; Roll: {{ r.student__roll_no }}
+                </div>
+                <div class="small">Phone: {{ r.student__contact_number }}</div>
+              </div>
+              <div>
+                <input type="checkbox" class="pick" name="student_ids" value="{{ r.student_id }}">
+              </div>
+            </div>
+            <div class="chips">
+              <span class="chip">Final ₹{{ r.total_final|floatformat:2 }}</span>
+              <span class="chip">Paid ₹{{ r.total_paid|floatformat:2 }}</span>
+              <span class="chip warn">Balance ₹{{ r.balance|floatformat:2 }}</span>
+            </div>
+          </label>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">No students with pending balances for the chosen filters.</div>
+    {% endif %}
+  </form>
+</div>
+
+<script>
+  (function(){
+    const msg=document.getElementById('msg');
+    const len=document.getElementById('len');
+    const sel=document.getElementById('sel');
+    const all=document.getElementById('checkall');
+    const picks=[...document.querySelectorAll('.pick')];
+    const tags=[...document.querySelectorAll('.tag')];
+
+    function update(){ len.textContent=msg.value.length; sel.textContent=picks.filter(p=>p.checked).length; }
+    msg.addEventListener('input',update);
+    picks.forEach(p=>p.addEventListener('change',update));
+    update();
+
+    if(all){ all.addEventListener('change',()=>{ picks.forEach(p=>p.checked=all.checked); update(); }); }
+
+    function insertAtCursor(el,text){
+      const s=el.selectionStart,e=el.selectionEnd;
+      el.setRangeText(text,s,e,'end'); el.focus(); update();
+    }
+    tags.forEach(t=>t.addEventListener('click',()=>insertAtCursor(msg,t.dataset.token)));
+  })();
+</script>
+{% endblock %}

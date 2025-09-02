@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exam Analytics | Periyanachi ERP{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-primary text-white">
+    <h4 class="mb-0">Exam Performance Analytics</h4>
+  </div>
+  <div class="card-body">
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <form method="get" class="row g-3">
+          <div class="col-md-4">
+            <label for="classLevel" class="form-label">Class Level</label>
+            <select name="class_level" id="classLevel" class="form-select">
+              <option value="">All Classes</option>
+              {% for cl in class_levels %}
+              <option value="{{ cl.id }}" {% if request.GET.class_level == cl.id|stringformat:"s" %}selected{% endif %}>
+                {{ cl.name }} ({{ cl.medium }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="termSelect" class="form-label">Term</label>
+            <select name="term" id="termSelect" class="form-select">
+              <option value="">All Terms</option>
+              {% for term in terms %}
+              <option value="{{ term.id }}" {% if request.GET.term == term.id|stringformat:"s" %}selected{% endif %}>
+                {{ term.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if data %}
+    <div class="row">
+      <!-- Class Summary -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Class Summary</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card bg-light mb-3">
+                  <div class="card-body text-center">
+                    <h6 class="card-title">Pass Percentage</h6>
+                    <div class="display-4 text-{% if data.pass_percentage >= 75 %}success{% elif data.pass_percentage >= 50 %}warning{% else %}danger{% endif %}">
+                      {{ data.pass_percentage|floatformat:1 }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card bg-light mb-3">
+                  <div class="card-body text-center">
+                    <h6 class="card-title">Class Average</h6>
+                    <div class="display-4 text-info">
+                      {{ data.class_average|floatformat:1 }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% if data.top_students %}
+            <h6 class="mt-3">Top Performing Students</h6>
+            <ol class="list-group list-group-numbered">
+              {% for student in data.top_students|slice:":5" %}
+              <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                  <div class="fw-bold">{{ student.student__name }}</div>
+                  {{ student.average|floatformat:1 }} average
+                </div>
+                <span class="badge bg-primary rounded-pill">{{ forloop.counter }}</span>
+              </li>
+              {% endfor %}
+            </ol>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject Performance -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Subject Performance</h5>
+          </div>
+          <div class="card-body">
+            {% if data.subject_stats %}
+            <div class="chart-container" style="position: relative; height:250px;">
+              <canvas id="subjectChart"></canvas>
+            </div>
+            <table class="table table-sm mt-3">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Avg Score</th>
+                  <th>Pass Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for subject in data.subject_stats %}
+                <tr>
+                  <td>{{ subject.subject__name }}</td>
+                  <td>{{ subject.avg_score|floatformat:1 }}</td>
+                  <td>{{ subject.pass_rate|floatformat:1 }}%</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No subject data available.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Improvement Trends -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Performance Trends</h5>
+          </div>
+          <div class="card-body">
+            {% if data.term_stats %}
+            <div class="chart-container" style="position: relative; height:150px;">
+              <canvas id="trendChart"></canvas>
+            </div>
+            {% else %}
+            <p class="text-muted">No trend data available.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Embed Chart Data for JS (no syntax errors) -->
+    <script id="chart-data" type="application/json">
+      {
+        "subject_labels": [{% for s in data.subject_stats %}"{{ s.subject__name }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+        "subject_scores": [{% for s in data.subject_stats %}{{ s.avg_score|floatformat:1 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+        "trend_labels": [{% for t in data.term_stats %}"{{ t.term__name }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+        "trend_scores": [{% for t in data.term_stats %}{{ t.avg_score|floatformat:1 }}{% if not forloop.last %}, {% endif %}{% endfor %}]
+      }
+    </script>
+
+    {% else %}
+    <div class="alert alert-info">
+      Please select filters to generate the analytics report.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Chart.js and Initialization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const data = JSON.parse(document.getElementById('chart-data')?.textContent || '{}');
+
+  const subjectChartCanvas = document.getElementById('subjectChart');
+  if (subjectChartCanvas && data.subject_labels && data.subject_scores) {
+    new Chart(subjectChartCanvas, {
+      type: 'bar',
+      data: {
+        labels: data.subject_labels,
+        datasets: [{
+          label: 'Average Score',
+          data: data.subject_scores,
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+  }
+
+  const trendChartCanvas = document.getElementById('trendChart');
+  if (trendChartCanvas && data.trend_labels && data.trend_scores) {
+    new Chart(trendChartCanvas, {
+      type: 'line',
+      data: {
+        labels: data.trend_labels,
+        datasets: [{
+          label: 'Class Average',
+          data: data.trend_scores,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          tension: 0.1,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

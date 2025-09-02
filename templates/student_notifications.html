@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+{% block title %}Notifications – {{ student.name }}{% endblock %}
+{% block content %}
+
+<style>
+  :root {
+    --primary: #4361ee;
+    --primary-light: #e0f2fe;
+    --secondary: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --light: #f9fafb;
+    --dark: #1f2937;
+    --gray: #6b7280;
+    --light-gray: #e5e7eb;
+    --border-radius: 12px;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .notifications-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .page-title {
+    color: var(--dark);
+    margin-bottom: 5px;
+    font-weight: 700;
+  }
+
+  .page-subtitle {
+    color: var(--gray);
+    margin-bottom: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-sms {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s;
+  }
+
+  .btn-sms:hover {
+    background: #3a56d4;
+    color: white;
+  }
+
+  .btn-mark-read {
+    background: var(--secondary);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s;
+  }
+
+  .btn-mark-read:hover {
+    background: #0da271;
+  }
+
+  .notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+
+  .notification-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid var(--primary);
+  }
+
+  .notification-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .notification-card.unread {
+    border-left-color: var(--warning);
+  }
+
+  .notification-card.just-sent {
+    border: 2px solid var(--primary);
+    border-radius: var(--border-radius);
+    animation: flash 1.2s ease-in-out 2;
+  }
+
+  @keyframes flash {
+    0%, 100% { background-color: #fff; }
+    50% { background-color: var(--primary-light); }
+  }
+
+  .notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .notification-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--dark);
+    margin-bottom: 5px;
+  }
+
+  .notification-time {
+    font-size: 0.85rem;
+    color: var(--gray);
+  }
+
+  .notification-badge {
+    background: var(--danger);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .notification-body {
+    color: var(--gray);
+    line-height: 1.5;
+    margin-bottom: 15px;
+  }
+
+  .fee-details {
+    background: var(--light);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+  }
+
+  .fee-category {
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .fee-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .fee-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+  }
+
+  .fee-label {
+    font-weight: 600;
+    color: var(--dark);
+  }
+
+  .fee-value {
+    font-weight: 500;
+  }
+
+  .fee-original {
+    color: var(--gray);
+    text-decoration: line-through;
+  }
+
+  .fee-discount {
+    color: var(--secondary);
+  }
+
+  .fee-final {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .fee-paid {
+    color: var(--secondary);
+  }
+
+  .fee-balance {
+    color: var(--warning);
+    font-weight: 700;
+  }
+
+  .status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .status-paid {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .status-pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    color: var(--light-gray);
+    margin-bottom: 15px;
+  }
+
+  .empty-state h3 {
+    margin: 0 0 10px 0;
+    color: var(--dark);
+  }
+
+  .empty-state p {
+    margin: 0;
+    color: var(--gray);
+  }
+
+  .summary-section {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 25px;
+    margin: 40px 0;
+  }
+
+  .summary-title {
+    color: var(--dark);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--light-gray);
+  }
+
+  .fee-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .fee-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform 0.3s;
+    border: 1px solid var(--light-gray);
+  }
+
+  .fee-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  .fee-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid var(--light-gray);
+  }
+
+  .fee-card-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--dark);
+  }
+
+  .fee-card-body {
+    padding: 20px;
+  }
+
+  .fee-progress {
+    margin-bottom: 20px;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: var(--light-gray);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, #4cc9f0 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .progress-text {
+    font-size: 0.8rem;
+    color: var(--gray);
+    text-align: center;
+  }
+
+  .fee-details-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--light-gray);
+  }
+
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+
+  .detail-label {
+    color: var(--gray);
+  }
+
+  .detail-value {
+    font-weight: 500;
+  }
+
+  .navigation-actions {
+    margin-top: 30px;
+  }
+
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: white;
+    color: var(--dark);
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: background 0.3s;
+    border: 1px solid var(--light-gray);
+  }
+
+  .btn-back:hover {
+    background: var(--light);
+    gap: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .page-header {
+      flex-direction: column;
+    }
+    
+    .header-actions {
+      flex-direction: column;
+      width: 100%;
+    }
+    
+    .fee-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .fee-cards-container {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="notifications-container">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">🔔 Notifications – {{ student.name }}</h2>
+      <p class="page-subtitle">View all notifications and fee details for this student</p>
+    </div>
+    <div class="header-actions">
+      <a class="btn-sms" href="{% url 'fees:fees_reminder_sms' %}?q={{ student.admission_number|urlencode }}">
+        <i class="fas fa-sms"></i> Send SMS for {{ student.name }}
+      </a>
+      
+      {% if notifications %}
+      <form method="post" action="{% url 'mark_notifications_read' student.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-mark-read">
+          <i class="fas fa-check-double"></i> Mark all as read
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if notifications %}
+  <div class="notifications-list">
+    {% for n in notifications %}
+    <div id="n-{{ n.id }}" class="notification-card {% if not n.is_read %}unread{% endif %} {% if focus_id and focus_id|stringformat:'s' == n.id|stringformat:'s' %}just-sent{% endif %}">
+      <div class="notification-header">
+        <div>
+          <div class="notification-title">{{ n.title }}</div>
+          <div class="notification-time">{{ n.created_at }}</div>
+        </div>
+        {% if not n.is_read %}
+        <span class="notification-badge">New</span>
+        {% endif %}
+      </div>
+      
+      {% if n.body %}
+      <div class="notification-body">{{ n.body }}</div>
+      {% endif %}
+      
+      {% if n.assignment %}
+      <div class="fee-details">
+        <div class="fee-category">
+          <i class="fas fa-receipt"></i>
+          {{ n.assignment.fee_structure.fee_category.name }}
+          <span class="status-badge {% if n.assignment.is_fully_paid %}status-paid{% else %}status-pending{% endif %}">
+            {% if n.assignment.is_fully_paid %}Paid{% else %}Pending{% endif %}
+          </span>
+        </div>
+        
+        <div class="fee-grid">
+          <div class="fee-item">
+            <span class="fee-label">Original:</span>
+            <span class="fee-value fee-original">₹{{ n.assignment.original_amount|floatformat:2 }}</span>
+          </div>
+          <div class="fee-item">
+            <span class="fee-label">Discount:</span>
+            <span class="fee-value fee-discount">-₹{{ n.assignment.discount_amount|floatformat:2 }}</span>
+          </div>
+          <div class="fee-item">
+            <span class="fee-label">Final Amount:</span>
+            <span class="fee-value fee-final">₹{{ n.assignment.final_amount|floatformat:2 }}</span>
+          </div>
+          <div class="fee-item">
+            <span class="fee-label">Paid:</span>
+            <span class="fee-value fee-paid">₹{{ n.assignment.paid_amount|floatformat:2 }}</span>
+          </div>
+          <div class="fee-item">
+            <span class="fee-label">Balance:</span>
+            <span class="fee-value fee-balance">
+              {% if n.assignment.balance_amount is not None %}
+                ₹{{ n.assignment.balance_amount|floatformat:2 }}
+              {% else %}
+                ₹{{ n.assignment.final_amount|floatformat:2 }}
+              {% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      
+      {% if n.link_url %}
+      <a href="{{ n.link_url }}" class="btn-sms" style="background: var(--light); color: var(--dark);">
+        <i class="fas fa-eye"></i> View Details
+      </a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <!-- <div class="empty-state">
+    <div class="empty-icon">
+      <i class="fas fa-bell-slash"></i>
+    </div>
+    <h3>No notifications yet</h3>
+    <p>You'll see important updates here when they become available.</p>
+  </div> -->
+  {% endif %}
+
+  <div class="summary-section">
+    <h3 class="summary-title"><i class="fas fa-file-invoice-dollar"></i> Complete Fee Summary</h3>
+    <div class="fee-cards-container">
+      {% for a in assignments %}
+      <div class="fee-card">
+        <div class="fee-card-header">
+          <h3>{{ a.fee_structure.fee_category.name }}</h3>
+          <span class="status-badge {% if a.is_fully_paid %}status-paid{% else %}status-pending{% endif %}">
+            {% if a.is_fully_paid %}Paid{% else %}Pending{% endif %}
+          </span>
+        </div>
+        <div class="fee-card-body">
+          <div class="fee-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: {% widthratio a.paid_amount a.final_amount 100 %}%"></div>
+            </div>
+            <div class="progress-text">
+              <span>Paid: ₹{{ a.paid_amount|floatformat:2 }} of ₹{{ a.final_amount|floatformat:2 }}</span>
+            </div>
+          </div>
+          <div class="fee-details-mini">
+            <div class="detail-row">
+              <span class="detail-label">Original:</span>
+              <span class="detail-value">₹{{ a.original_amount|floatformat:2 }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Discount:</span>
+              <span class="detail-value fee-discount">-₹{{ a.discount_amount|floatformat:2 }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Final Amount:</span>
+              <span class="detail-value fee-final">₹{{ a.final_amount|floatformat:2 }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Balance:</span>
+              <span class="detail-value fee-balance">₹{{ a.balance_amount|floatformat:2 }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-file-invoice"></i>
+        </div>
+        <h3>No fee assignments</h3>
+        <p>This student doesn't have any fee assignments yet.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="navigation-actions">
+    <a href="{% url 'student_list' %}" class="btn-back">
+      <i class="fas fa-arrow-left"></i> Back to Students
+    </a>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var focusId = "{{ focus_id|default:'' }}";
+    if (focusId) {
+      var el = document.getElementById("n-" + focusId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("just-sent");
+      }
+    }
+  })();
+</script>
+{% endblock %}

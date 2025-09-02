@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bonafide Certificate</title>
+  <style>
+    body {
+      font-family: 'Times New Roman', serif;
+      margin: 40px;
+      line-height: 1.6;
+    }
+    h2 {
+      text-align: center;
+      text-decoration: underline;
+    }
+    .content {
+      margin-top: 40px;
+      font-size: 18px;
+    }
+    .footer {
+      margin-top: 60px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <h2>BONAFIDE CERTIFICATE</h2>
+  <div class="content">
+    This is to certify that <strong>{{ student.full_name }}</strong>, S/o / D/o 
+    residing at <strong>{{ student.address }}</strong>, is a bonafide student of our institution.<br><br>
+
+    He/She has been studying in <strong>{{ student.class_section }}</strong> since 
+    <strong>{{ student.admission_date }}</strong>. His/Her date of birth is <strong>{{ student.dob }}</strong>.
+  </div>
+  <div class="footer">
+    <p>Principal</p>
+  </div>
+</body>
+</html>

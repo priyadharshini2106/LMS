@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'exams:exam_schedule_view' %}">Exam Schedules</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+
+{% block content %}
+
+<style>
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #3b82f6;
+    --secondary: #10b981;
+    --accent: #f59e0b;
+    --danger: #ef4444;
+    --light: #f9fafb;
+    --dark: #1f2937;
+    --gray: #6b7280;
+    --light-gray: #e5e7eb;
+    --border-radius: 12px;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+  }
+
+  .form-container {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .form-header h2 {
+    color: var(--primary);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-header p {
+    color: var(--gray);
+    font-size: 1.1rem;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .form-label i {
+    color: var(--primary);
+    width: 20px;
+  }
+
+  .form-control {
+    padding: 12px 16px;
+    border: 2px solid var(--light-gray);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+    background: white;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+  }
+
+  select.form-control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231e3a8a' viewBox='0 0 16 16'%3E%3Cpath d='M8 12L2 6h12L8 12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 40px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+
+  .form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--light-gray);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 12px 24px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: var(--light-gray);
+    color: var(--dark);
+  }
+
+  .btn-secondary:hover {
+    background: #d1d5db;
+    transform: translateY(-2px);
+  }
+
+  .form-icon {
+    position: relative;
+  }
+
+  .form-icon i {
+    position: absolute;
+    left: 16px;
+    top: 35%;
+    transform: translateY(-50%);
+    color: var(--primary);
+    z-index: 1;
+  }
+
+  .form-icon .form-control {
+    padding-left: 45px;
+  }
+
+  @media (max-width: 768px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+      flex-direction: column;
+    }
+    
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* Animation for form elements */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .form-group {
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
+  }
+
+  .form-group:nth-child(1) { animation-delay: 0.1s; }
+  .form-group:nth-child(2) { animation-delay: 0.2s; }
+  .form-group:nth-child(3) { animation-delay: 0.3s; }
+  .form-group:nth-child(4) { animation-delay: 0.4s; }
+  .form-group:nth-child(5) { animation-delay: 0.5s; }
+  .form-group:nth-child(6) { animation-delay: 0.6s; }
+  .form-group:nth-child(7) { animation-delay: 0.7s; }
+  .form-group:nth-child(8) { animation-delay: 0.8s; }
+  .form-group:nth-child(9) { animation-delay: 0.9s; }
+  .form-group:nth-child(10) { animation-delay: 1.0s; }
+</style>
+
+<div class="form-container">
+  <div class="form-header">
+    <h2>{{ title }}</h2>
+    <p>Create or update exam schedule details</p>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    
+    <div class="form-grid">
+      <!-- Exam Type -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-graduation-cap"></i>
+          Exam Type
+        </label>
+        {{ form.exam_type }}
+      </div>
+
+      <!-- Exam Name -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-signature"></i>
+          Exam Name
+        </label>
+        {{ form.exam_name }}
+      </div>
+
+      <!-- Term -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-calendar-alt"></i>
+          Term
+        </label>
+        {{ form.term }}
+      </div>
+
+      <!-- Class Level -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-users-class"></i>
+          Class Level
+        </label>
+        {{ form.class_level }}
+      </div>
+
+      <!-- Subject -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-book"></i>
+          Subject
+        </label>
+        {{ form.subject }}
+      </div>
+
+      <!-- Exam Date -->
+      <div class="form-group form-icon">
+        <label class="form-label">
+          <i class="fas fa-calendar-day"></i>
+          Exam Date
+        </label>
+        <i class="fas fa-calendar"></i>
+        {{ form.exam_date }}
+      </div>
+
+      <!-- Max Marks -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-chart-bar"></i>
+          Max Marks
+        </label>
+        {{ form.max_marks }}
+      </div>
+
+      <!-- Room -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-door-open"></i>
+          Room
+        </label>
+        {{ form.room }}
+      </div>
+
+      <!-- Invigilator -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-user-tie"></i>
+          Invigilator
+        </label>
+        {{ form.invigilator }}
+      </div>
+
+      <!-- Status -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-status"></i>
+          Status
+        </label>
+        {{ form.status }}
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> Save Schedule
+        </button>
+        <a href="{% url 'exams:exam_schedule_view' %}" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'vendor/flatpickr/flatpickr.min.css' %}">
+<style>
+  .flatpickr-calendar {
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--light-gray);
+  }
+  
+  .flatpickr-day.selected {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  
+  .flatpickr-day.today {
+    border-color: var(--primary-light);
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'vendor/flatpickr/flatpickr.min.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // datepicker init with better styling
+    const input = document.getElementById('id_exam_date');
+    if (input) {
+      flatpickr(input, { 
+        dateFormat: 'Y-m-d', 
+        allowInput: true,
+        static: true,
+        position: 'auto',
+        theme: 'light',
+        appendTo: document.querySelector('.form-icon'),
+        onReady: function(selectedDates, dateStr, instance) {
+          instance.calendarContainer.style.zIndex = '1000';
+        }
+      });
+    }
+
+    // dependent Subject dropdown
+    const classLevelSel = document.getElementById('id_class_level');
+    const subjectSel    = document.getElementById('id_subject');
+
+    function loadSubjects(classLevelId) {
+      if (!classLevelId || !subjectSel) return;
+      
+      // Show loading state
+      subjectSel.disabled = true;
+      const originalHtml = subjectSel.innerHTML;
+      subjectSel.innerHTML = '<option value="">Loading subjects...</option>';
+      
+      fetch("{% url 'ajax_subjects_for_class' %}?class_level=" + classLevelId)
+        .then(r => r.json())
+        .then(data => {
+          subjectSel.innerHTML = '<option value="">Select Subject</option>';
+          data.forEach(opt => {
+            const o = document.createElement('option');
+            o.value = opt.id;
+            o.text  = opt.name;
+            subjectSel.appendChild(o);
+          });
+          subjectSel.disabled = false;
+        })
+        .catch(() => { 
+          subjectSel.innerHTML = originalHtml;
+          subjectSel.disabled = false;
+        });
+    }
+
+    if (classLevelSel && subjectSel) {
+      classLevelSel.addEventListener('change', e => loadSubjects(e.target.value));
+      if (classLevelSel.value && subjectSel.options.length <= 1) {
+        loadSubjects(classLevelSel.value);
+      }
+    }
+
+    // Add focus styles to all form elements
+    const formControls = document.querySelectorAll('.form-control');
+    formControls.forEach(control => {
+      control.addEventListener('focus', function() {
+        this.parentElement.classList.add('focused');
+      });
+      control.addEventListener('blur', function() {
+        this.parentElement.classList.remove('focused');
+      });
+    });
+  });
+</script>
+{% endblock %}

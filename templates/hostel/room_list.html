@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Rooms{% endblock %}
+
+{% block content %}
+<style>
+  /* ===== Shared look (mirrors Hostel List) ===== */
+  html, body { height: 100%; }
+  body { background: transparent !important; }
+  body::before{
+    content:"";
+    position: fixed; inset: 0;
+    background: url("{% static 'images/bg-wave.png' %}") center/cover no-repeat fixed;
+    z-index: -1;
+  }
+
+  .edge-to-edge{ width:100vw; position:relative; left:50%; right:50%; margin-left:-50vw; margin-right:-50vw; }
+  .page-wrap{
+    width:100%;
+    background: rgba(255,255,255,.70);
+    border:1px solid rgba(233,213,255,.55);
+    border-radius:12px;
+    padding:18px 22px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow:0 8px 24px rgba(0,0,0,.08);
+  }
+  .page-title{ font-weight:800; font-size:1.9rem; display:flex; align-items:center; gap:.6rem; margin-bottom:.6rem; }
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem; }
+
+  .btnx{ display:inline-block; padding:.44rem .9rem; border-radius:999px; font-weight:700; text-decoration:none!important; transition:.18s; border:1px solid transparent; }
+  .btnx:focus{ outline:none; box-shadow:0 0 0 .18rem rgba(124,58,237,.18); }
+  .btn-primaryx{ background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:0; box-shadow:0 10px 22px rgba(124,58,237,.25); }
+  .btn-primaryx:hover{ background:#5b21b6; color:#fff; transform:translateY(-1px); }
+  .btn-outlinex{ background:#fff; border:1px solid rgba(233,213,255,.75); color:#3b3b3b; }
+  .btn-outlinex:hover{ background:#6d28d9; color:#fff; border-color:#6d28d9; }
+  .btn-editx{ background:#fff; border:1px solid #fbbf24; color:#b45309; padding:.28rem .7rem; font-size:.92rem; }
+  .btn-editx:hover{ background:#b45309; color:#fff; border-color:#b45309; }
+  .btn-delex{ background:#fff; border:1px solid #fca5a5; color:#b91c1c; padding:.28rem .7rem; font-size:.92rem; cursor:pointer; }
+  .btn-delex:hover{ background:#b91c1c; color:#fff; border-color:#b91c1c; }
+
+  .search-input{ border:1px solid rgba(233,213,255,.75); border-radius:999px; padding:.5rem 1rem; min-width:320px; background:rgba(255,255,255,.9); }
+  .search-input:focus{ border-color:#8b5cf6; box-shadow:0 0 0 .18rem rgba(139,92,246,.18); outline:none; }
+
+  .table-wrap{ width:100%; border:1px solid rgba(233,213,255,.55); border-radius:12px; overflow:hidden; background:transparent; }
+  table{ width:100%; border-collapse:collapse; background:transparent; }
+  thead th{ background:rgba(233,213,255,.85); color:#3b197b; text-align:left; padding:.85rem .9rem; font-weight:800; font-size:1.02rem; }
+  tbody tr{ background:transparent!important; border-bottom:1px solid rgba(233,213,255,.55); }
+  tbody tr:last-child{ border-bottom:none; }
+  td{ padding:.9rem .9rem; font-size:1.03rem; color:#0f0f13; vertical-align:middle; }
+  tbody tr:hover{ background:rgba(255,255,255,.24); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+  .text-right{ text-align:right; }
+
+  .badge-hostel{
+    display:inline-block; padding:.25rem .55rem; border-radius:999px; font-weight:700; font-size:.82rem;
+    background:rgba(238,242,255,.85); color:#3730a3; border:1px solid rgba(59,130,246,.2);
+  }
+
+  /* ===== Confirmation Modal (same behaviour as hostel list) ===== */
+  .confirm-modal {
+    position: fixed; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.6); z-index: 2000;
+  }
+  .confirm-modal.active { display: flex; }
+  .confirm-box {
+    background: white; padding: 20px; border-radius: 12px; max-width: 340px; text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+  .confirm-box h4 { margin-bottom: 1rem; font-weight: 700; }
+  .confirm-actions { display: flex; gap: .5rem; justify-content: center; }
+  .confirm-btn { padding: .4rem .9rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
+  .confirm-yes { background: #b91c1c; color: white; }
+  .confirm-no { background: #e5e7eb; }
+
+  /* ===== Undo Toast ===== */
+  .undo-toast {
+    position: fixed; top: 20px; right: 20px;
+    background: #8987ff; color: white; padding: .6rem 1rem;
+    border-radius: 8px; font-weight: 600; display: none; z-index: 3000;
+  }
+  .undo-toast button {
+    background: rgba(255,255,255,0.2); color: white; border: none;
+    margin-left: 10px; padding: .2rem .6rem; border-radius: 4px; cursor: pointer;
+  }
+</style>
+
+<div class="edge-to-edge">
+  <div class="page-wrap">
+    <h2 class="page-title">🛏️ Room List</h2>
+
+    <div class="toolbar">
+      <div><a href="{% url 'hostel:room_create' %}" class="btnx btn-primaryx">➕ Add Room</a></div>
+
+      <form method="get" style="display:flex; gap:.6rem; align-items:center;">
+        <input class="search-input" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by hostel, room number, floor…">
+        <button class="btnx btn-outlinex" type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px;">#</th>
+            <th>Hostel</th>
+            <th>Room Number</th>
+            <th style="width:120px;">Floor</th>
+            <th>Beds</th> <!-- New column for Beds -->
+            <th class="text-right" style="width:240px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for room in rooms %}
+          <tr data-id="{{ room.pk }}">
+            <td>{{ forloop.counter }}</td>
+            <td><span class="badge-hostel">{{ room.hostel.name }}</span></td>
+            <td>{{ room.room_number }}</td>
+            <td>{% if room.floor != None %}{{ room.floor }}{% else %}-{% endif %}</td>
+            
+            <!-- Display beds here -->
+            <td>
+              {% for bed in room.bed_set.all %}
+                <span class="badge badge-hostel">{{ bed.bed_number }} ({{ bed.is_available|yesno:"Available,Unavailable" }})</span><br>
+              {% empty %}
+                No beds assigned
+              {% endfor %}
+            </td>
+            
+            <td class="text-right">
+              {% if room.pk %}
+                <a href="{% url 'hostel:room_edit' room.pk %}" class="btnx btn-editx">✏️ Edit</a>
+                <form action="{% url 'hostel:room_delete' room.pk %}" method="post" class="delete-form" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btnx btn-delex">🗑️ Delete</button>
+                </form>
+              {% else %}
+                <button class="btnx btn-outlinex" disabled>Edit</button>
+                <button class="btnx btn-delex" disabled>Delete</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" style="text-align:center; padding:2rem 0;">No rooms found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align:right; margin-top:.6rem; font-weight:600;">
+      Showing {{ rooms|length }} item{{ rooms|length|pluralize }}
+    </div>
+
+    {% if is_paginated %}
+      <nav class="mt-2">
+        <ul class="pagination justify-content-end">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Previous</a></li>
+          {% endif %}
+          <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-box">
+    <h4>Are you sure you want to delete this room?</h4>
+    <div class="confirm-actions">
+      <button class="confirm-btn confirm-yes">Yes</button>
+      <button class="confirm-btn confirm-no">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- Undo Toast -->
+<div class="undo-toast" id="undoToast">
+  Room deletion scheduled.
+  <button id="undoBtn">Undo</button>
+</div>
+
+<script>
+(function(){
+  let targetForm = null;
+  const confirmModal = document.getElementById('confirmModal');
+  const undoToast = document.getElementById('undoToast');
+  const undoBtn = document.getElementById('undoBtn');
+  let submitTimer = null;
+
+  document.querySelectorAll('.delete-form').forEach(form=>{
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      targetForm = form;
+      confirmModal.classList.add('active');
+    });
+  });
+
+  confirmModal.querySelector('.confirm-yes').addEventListener('click', ()=>{
+    confirmModal.classList.remove('active');
+    undoToast.style.display = 'block';
+    submitTimer = setTimeout(()=>{
+      undoToast.style.display = 'none';
+      if (targetForm) targetForm.submit();
+      targetForm = null;
+      submitTimer = null;
+    }, 5000);
+  });
+
+  confirmModal.querySelector('.confirm-no').addEventListener('click', ()=>{
+    confirmModal.classList.remove('active');
+    targetForm = null;
+  });
+
+  undoBtn.addEventListener('click', ()=>{
+    if (submitTimer) clearTimeout(submitTimer);
+    submitTimer = null;
+    targetForm = null;
+    undoToast.style.display = 'none';
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape' && confirmModal.classList.contains('active')) {
+      confirmModal.classList.remove('active');
+      targetForm = null;
+    }
+  });
+})();
+</script>
+{% endblock %}

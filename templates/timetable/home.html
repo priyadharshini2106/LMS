@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <div class="card shadow-sm rounded-4">
+        <div class="card-body">
+            <h2 class="card-title mb-4 text-primary">📘 Timetable Management Dashboard</h2>
+
+            <div class="d-grid gap-3">
+                <a href="{% url 'period_list' %}" class="btn btn-outline-primary">
+                    ⏱ Manage Periods
+                </a>
+                <a href="{% url 'timetable_list' %}" class="btn btn-outline-primary">
+                    📅 View Timetable Grid
+                </a>
+                <a href="{% url 'generate_auto_timetable' %}" class="btn btn-outline-success">
+                    ⚙️ Auto Generate Timetable
+                </a>
+                <a href="{% url 'export_timetable_pdf' %}" class="btn btn-outline-info">
+                    📄 Export Timetable (PDF)
+                    
+                </a>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="mt-3">
+                <h5 class="text-secondary">🔮 Upcoming Features</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">👩‍🏫 Teacher-wise Timetable View</li>
+                    <li class="list-group-item">🔁 Copy Weekly Structure</li>
+                    <li class="list-group-item">⚠️ Conflict Checker</li>
+                    <li class="list-group-item">🛎 Special Day Management</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

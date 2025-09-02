@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Outpasses | Periyanachi ERP{% endblock %}
+
+{% block content %}
+<style>
+  /* ===== Backdrop & Shell ===== */
+  html, body { height: 100%; }
+  body { background: transparent !important; }
+  body::before{
+    content:"";
+    position: fixed; inset: 0;
+    background: url("{% static 'images/bg-wave.png' %}") center/cover no-repeat fixed;
+    z-index: -1;
+  }
+  .edge-to-edge{ width:100vw; position:relative; left:50%; right:50%; margin-left:-50vw; margin-right:-50vw; }
+  .page-wrap{
+    width:100%;
+    background: rgba(255,255,255,.70);
+    border:1px solid rgba(233,213,255,.55);
+    border-radius:12px;
+    padding:18px 22px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow:0 8px 24px rgba(0,0,0,.08);
+  }
+  .page-title{ font-weight:800; font-size:1.9rem; display:flex; align-items:center; gap:.6rem; margin-bottom:.6rem; }
+
+  /* ===== Toolbar ===== */
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem; }
+  .actions-inline{ display:flex; gap:.6rem; align-items:center; }
+
+  .btnx{ display:inline-block; padding:.44rem .9rem; border-radius:999px; font-weight:700; text-decoration:none!important; transition:.18s; border:1px solid transparent; }
+  .btnx:focus{ outline:none; box-shadow:0 0 0 .18rem rgba(124,58,237,.18); }
+  .btn-primaryx{ background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:0; box-shadow:0 10px 22px rgba(124,58,237,.25); }
+  .btn-primaryx:hover{ background:#5b21b6; color:#fff; transform:translateY(-1px); }
+  .btn-outlinex{ background:#fff; border:1px solid rgba(233,213,255,.75); color:#3b3b3b; }
+  .btn-outlinex:hover{ background:#6d28d9; color:#fff; border-color:#6d28d9; }
+  .btn-editx{ background:#fff; border:1px solid #60a5fa; color:#1d4ed8; padding:.28rem .7rem; font-size:.92rem; }
+  .btn-editx:hover{ background:#1d4ed8; color:#fff; border-color:#1d4ed8; }
+  .btn-approvex{ background:#fff; border:1px solid #86efac; color:#047857; padding:.28rem .7rem; font-size:.92rem; }
+  .btn-approvex:hover{ background:#047857; color:#fff; border-color:#047857; }
+  .btn-rejectx{ background:#fff; border:1px solid #fca5a5; color:#b91c1c; padding:.28rem .7rem; font-size:.92rem; }
+  .btn-rejectx:hover{ background:#b91c1c; color:#fff; border-color:#b91c1c; }
+
+  .search-input, .select-input{
+    border:1px solid rgba(233,213,255,.75); border-radius:999px; padding:.5rem 1rem; background:rgba(255,255,255,.9);
+  }
+  .search-input{ min-width:280px; }
+  .select-input{ min-width:160px; }
+  .search-input:focus, .select-input:focus{ border-color:#8b5cf6; box-shadow:0 0 0 .18rem rgba(139,92,246,.18); outline:none; }
+
+  /* ===== Table ===== */
+  .table-wrap{ width:100%; border:1px solid rgba(233,213,255,.55); border-radius:12px; overflow:hidden; background:transparent; }
+  table{ width:100%; border-collapse:collapse; background:transparent; }
+  thead th{ background:rgba(233,213,255,.85); color:#3b197b; text-align:left; padding:.85rem .9rem; font-weight:800; font-size:1.02rem; }
+  tbody tr{ background:transparent!important; border-bottom:1px solid rgba(233,213,255,.55); }
+  tbody tr:last-child{ border-bottom:none; }
+  td{ padding:.9rem .9rem; font-size:1.03rem; color:#0f0f13; vertical-align:middle; }
+  tbody tr:hover{ background:rgba(255,255,255,.24); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+
+  .text-right{ text-align:right; }
+  .muted{ color:#6b7280; }
+  .truncate{ max-width:360px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* ===== Badges ===== */
+  .badgex{ display:inline-block; padding:.28rem .55rem; border-radius:999px; font-weight:700; font-size:.82rem; }
+  .badge-pending{  background:rgba(255,243,191,.85); color:#92400e; }
+  .badge-approved{ background:rgba(209,250,229,.85); color:#065f46; }
+  .badge-rejected{ background:rgba(254,226,226,.85); color:#991b1b; }
+
+  /* ===== Confirmation Modal ===== */
+  .confirm-modal {
+    position: fixed; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.6); z-index: 2000;
+  }
+  .confirm-modal.active { display: flex; }
+  .confirm-box {
+    background: white; padding: 20px; border-radius: 12px; max-width: 340px; text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+  .confirm-box h4 { margin-bottom: 1rem; font-weight: 700; }
+  .confirm-actions { display: flex; gap: .5rem; justify-content: center; }
+  .confirm-btn { padding: .4rem .9rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
+  .confirm-yes { background: #b91c1c; color: white; }
+  .confirm-no { background: #e5e7eb; }
+
+  /* ===== Undo Toast ===== */
+  .undo-toast {
+    position: fixed; top: 20px; right: 20px;
+    background: #8987ff; color: white; padding: .6rem 1rem;
+    border-radius: 8px; font-weight: 600; display: none; z-index: 3000;
+  }
+  .undo-toast button {
+    background: rgba(255,255,255,0.2); color: white; border: none;
+    margin-left: 10px; padding: .2rem .6rem; border-radius: 4px; cursor: pointer;
+  }
+</style>
+
+<div class="edge-to-edge">
+  <div class="page-wrap">
+    <h2 class="page-title">📤 Outpass Requests</h2>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="actions-inline">
+        <a href="{% url 'hostel:outpass_create' %}" class="btnx btn-primaryx">➕ New Outpass</a>
+      </div>
+
+      <form method="get" class="actions-inline">
+        <input type="text" name="q" value="{{ request.GET.q }}" class="search-input" placeholder="Search by student / reason / status…" />
+        <select name="status" class="select-input">
+          <option value="">All statuses</option>
+          <option value="Pending"  {% if request.GET.status == 'Pending' %}selected{% endif %}>Pending</option>
+          <option value="Approved" {% if request.GET.status == 'Approved' %}selected{% endif %}>Approved</option>
+          <option value="Rejected" {% if request.GET.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+        <button class="btnx btn-outlinex" type="submit">Filter</button>
+      </form>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:20%;">Student</th>
+            <th>Reason</th>
+            <th style="width:14%;">From</th>
+            <th style="width:14%;">To</th>
+            <th style="width:12%;">Status</th>
+            <th style="width:10%;">Approved?</th>
+            <th class="text-right" style="width:18%;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in outpasses %}
+          <tr>
+            <td>{{ o.student }}</td>
+            <td class="muted truncate" title="{{ o.reason|default:'—' }}">{{ o.reason|default:"—" }}</td>
+            <td>{{ o.start_date|date:"Y-m-d H:i" }}</td>
+            <td>{{ o.end_date|date:"Y-m-d H:i" }}</td>
+            <td>
+              {% if o.status == "Approved" %}
+                <span class="badgex badge-approved">Approved</span>
+              {% elif o.status == "Rejected" %}
+                <span class="badgex badge-rejected">Rejected</span>
+              {% else %}
+                <span class="badgex badge-pending">Pending</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if o.approved %}
+                ✅
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td class="text-right">
+              <a href="{% url 'hostel:outpass_update' o.pk %}" class="btnx btn-editx" title="Edit">✏️ Edit</a>
+
+              <!-- Approve -->
+              <form action="{% url 'hostel:outpass_approve' o.pk %}" method="post" class="inline-form approve-form" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btnx btn-approvex" {% if o.status == 'Approved' %}disabled{% endif %} title="Approve">
+                  ✓ Approve
+                </button>
+              </form>
+
+              <!-- Reject -->
+              <form action="{% url 'hostel:outpass_reject' o.pk %}" method="post" class="inline-form reject-form" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btnx btn-rejectx" {% if o.status == 'Rejected' %}disabled{% endif %} title="Reject">
+                  ✕ Reject
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" style="text-align:center; padding:2rem 0;">No outpasses found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+      <div style="display:flex; justify-content:flex-end; margin-top:.8rem; gap:.4rem; align-items:center; font-weight:600;">
+        {% if page_obj.has_previous %}
+          <a class="btnx btn-outlinex" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">&laquo; Prev</a>
+        {% endif %}
+        <span class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a class="btnx btn-outlinex" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next &raquo;</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Confirmation Modal (used for Reject by default) -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-box">
+    <h4>Are you sure you want to reject this outpass?</h4>
+    <div class="confirm-actions">
+      <button class="confirm-btn confirm-yes">Yes</button>
+      <button class="confirm-btn confirm-no">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- Undo Toast -->
+<div class="undo-toast" id="undoToast">
+  Action queued. <button id="undoBtn">Undo</button>
+</div>
+
+<script>
+(function(){
+  // Optional: confirm before rejecting
+  let targetForm = null;
+  const confirmModal = document.getElementById('confirmModal');
+  const undoToast = document.getElementById('undoToast');
+  const undoBtn = document.getElementById('undoBtn');
+
+  document.querySelectorAll('.reject-form').forEach(form=>{
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      targetForm = form;
+      confirmModal.classList.add('active');
+    });
+  });
+
+  confirmModal.querySelector('.confirm-yes').addEventListener('click', ()=>{
+    confirmModal.classList.remove('active');
+    // Show Undo toast before actually submitting
+    undoToast.style.display = 'block';
+    setTimeout(()=>{ 
+      if (targetForm) targetForm.submit();
+      undoToast.style.display = 'none';
+    }, 3000); // 3s grace
+  });
+  confirmModal.querySelector('.confirm-no').addEventListener('click', ()=>{
+    confirmModal.classList.remove('active');
+    targetForm = null;
+  });
+
+  undoBtn.addEventListener('click', ()=>{
+    undoToast.style.display = 'none';
+    targetForm = null; // Cancel
+  });
+
+  // Approve can be instant; if you want confirmation for approve too,
+  // duplicate the handler above for '.approve-form'.
+})();
+</script>
+{% endblock %}

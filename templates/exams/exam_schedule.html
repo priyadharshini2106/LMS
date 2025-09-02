@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exam Schedule{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Exam Schedule</li>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page header with two buttons -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">Exam Schedule Management</h2>
+  <div class="btn-group">
+    <a href="{% url 'exams:add_exam_schedule' %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Add New Schedule
+    </a>
+    <a href="{% url 'exams:bulk_exam_schedule' %}" class="btn btn-outline-primary">
+      <i class="bi bi-magic"></i> Bulk Schedule
+    </a>
+  </div>
+</div>
+
+<!-- Filter form -->
+<div class="mb-4">
+  <form method="get" class="row g-3 align-items-end">
+    <div class="col-12">
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger mb-2">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Class Level</label>
+      {{ form.class_level }}
+      {{ form.class_level.errors }}
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Term</label>
+      {{ form.term }}
+      {{ form.term.errors }}
+    </div>
+
+    <div class="col-md-4">
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{% url 'exams:exam_schedule_view' %}" class="btn btn-outline-secondary">Reset</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% if schedule %}
+{% if schedule|length %}
+<div class="table-responsive">
+  <table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>Exam</th>
+        <th>Type</th>
+        <th>Class</th>
+        <th>Subject</th>
+        <th>Date</th>
+        <th>Room</th>
+        <th>Status</th>
+        <th style="width: 160px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in schedule %}
+      <tr>
+        <td>{{ item.exam_name }}</td>
+        <td>{{ item.exam_type }}</td>
+        <td>{{ item.class_level }}</td>
+        <td>{{ item.subject }}</td>
+        <td>{{ item.exam_date|date:"Y-m-d" }}</td>
+        <td>{{ item.room.name|default:"-" }}</td>
+        <td>
+          <span
+            class="badge bg-{% if item.status == 'published' %}success{% elif item.status == 'completed' %}info{% elif item.status == 'graded' %}primary{% elif item.status == 'scheduled' %}warning{% else %}secondary{% endif %}">
+            {{ item.get_status_display }}
+          </span>
+        </td>
+        <td>
+          <div class="btn-group btn-group-sm">
+            {% if item.pk %}
+            <a href="{% url 'exams:edit_exam_schedule' item.pk %}" class="btn btn-warning">
+              Edit
+            </a>
+            {% else %}
+            <button class="btn btn-warning" disabled>Edit</button>
+            {% endif %}
+            {# exam_schedule.html #}
+            <a href="{% url 'exams:bulk_exam_mark_entry' item.term.id item.subject.id item.class_level.id %}"
+              class="btn btn-primary">Enter Marks</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="alert alert-info">No exam schedules found for the selected filters.</div>
+{% endif %}
+{% else %}
+<div class="alert alert-info">Use the filters above and click <strong>Filter</strong> to view schedules, or create one
+  using <strong>Add New Schedule</strong>.</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,411 @@
+{# templates/fees/fee_category_list.html #}
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<style>
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #3b82f6;
+    --secondary: #10b981;
+    --accent: #f59e0b;
+    --danger: #ef4444;
+    --light: #f9fafb;
+    --dark: #1f2937;
+    --gray: #6b7280;
+    --light-gray: #e5e7eb;
+    --border-radius: 8px;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    background-color: #f3f4f6;
+    color: var(--dark);
+    padding: 20px;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .header h1 {
+    color: var(--primary);
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+
+  .header p {
+    color: var(--gray);
+    font-size: 1.1rem;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    background: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 25px;
+  }
+
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-light);
+  }
+
+  .btn-secondary {
+    background: var(--secondary);
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background: #0da271;
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-accent:hover {
+    background: #fbbf24;
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .table-wrapper {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 30px;
+  }
+
+  .table-header {
+    padding: 15px 20px;
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+  }
+
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1000px;
+  }
+
+  thead {
+    background: var(--primary);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--light-gray);
+    transition: background 0.2s;
+  }
+
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  td {
+    padding: 14px 12px;
+    font-size: 0.9rem;
+    color: var(--dark);
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .status-active {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .status-inactive {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .badge-yes {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .badge-no {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 10px;
+    white-space: nowrap;
+  }
+
+  .empty-table {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray);
+    min-width: 100%;
+  }
+
+  .empty-table i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: #d1d5db;
+  }
+
+  .empty-table p {
+    font-size: 1.1rem;
+  }
+
+  .scroll-indicator {
+    display: none;
+    padding: 8px 15px;
+    background: var(--primary-light);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 1200px) {
+    .scroll-indicator {
+      display: inline-block;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .top-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .action-buttons {
+      justify-content: center;
+    }
+    
+    .table-header {
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+    }
+  }
+</style>
+
+<div class="container">
+  <div class="header">
+    <h1><i class="fas fa-tags"></i> Fee Categories</h1>
+    <p>Manage all fee categories in one place</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="action-buttons">
+      <a href="{% url 'fees:add_fee_category' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Category
+      </a>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <!-- <div class="table-header">
+      <span>Fee Categories List</span>
+      <span class="scroll-indicator">
+        <i class="fas fa-arrows-alt-h"></i> Scroll horizontally to view all columns
+      </span>
+    </div> -->
+    
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Applies To</th>
+            <th>Refundable</th>
+            <th>Status</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for category in categories %}
+          <tr>
+            <td>{{ category.name }}</td>
+            <td>{{ category.get_fee_type_display }}</td>
+            <td>{{ category.applicable_to_display }}</td>
+            <td>
+              {% if category.is_refundable %}
+                <span class="status-badge badge-yes">Yes</span>
+              {% else %}
+                <span class="status-badge badge-no">No</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if category.status %}
+                <span class="status-badge status-active">Active</span>
+              {% else %}
+                <span class="status-badge status-inactive">Inactive</span>
+              {% endif %}
+            </td>
+            <td>{{ category.description|default:"—" }}</td>
+            <td class="actions-cell">
+              <a href="{% url 'fees:edit_fee_category' category.pk %}"
+                 class="btn btn-sm btn-primary">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="empty-table">
+              <i class="fas fa-tags"></i>
+              <p>No fee categories found</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add some interactive elements
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Ignore if clicking on actions or links
+        if (!e.target.closest('.actions-cell') && !e.target.closest('a')) {
+          row.style.backgroundColor = '#f1f5f9';
+          setTimeout(() => {
+            row.style.backgroundColor = '';
+          }, 300);
+        }
+      });
+    });
+    
+    // Add horizontal scroll indicator
+    const tableContainer = document.querySelector('.table-container');
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+    
+    if (tableContainer.scrollWidth > tableContainer.clientWidth) {
+      scrollIndicator.style.display = 'inline-block';
+    }
+    
+    // Hide scroll indicator after scrolling
+    tableContainer.addEventListener('scroll', function() {
+      scrollIndicator.style.opacity = '0.5';
+      
+      clearTimeout(window.scrollTimeout);
+      window.scrollTimeout = setTimeout(function() {
+        scrollIndicator.style.opacity = '1';
+      }, 1500);
+    });
+
+    // Add animation to table rows
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach((row, index) => {
+      row.style.opacity = '0';
+      row.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        row.style.opacity = '1';
+        row.style.transform = 'translateY(0)';
+      }, index * 100);
+    });
+  });
+</script>
+{% endblock %}

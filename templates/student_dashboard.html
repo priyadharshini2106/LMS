@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1e40af;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .card a {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e3a8a;
+            text-decoration: none;
+        }
+        .logout {
+            text-align: center;
+            margin-top: 40px;
+        }
+        .logout a {
+            color: white;
+            background-color: #ef4444;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Welcome, {{ request.user.first_name }}</h2>
+
+    <div class="grid">
+        <div class="card"><a href="{% url 'student_dashboard' %}">📆 Timetable</a></div>
+        <div class="card"><a href="/exams/">📝 Exam Marks</a></div>
+        <div class="card"><a href="/fees/">💰 My Fees</a></div>
+        <div class="card"><a href="/events/">📢 Events</a></div>
+        <div class="card"><a href="/certificates/bonafide/1/">📄 Get Bonafide</a></div>
+        <div class="card"><a href="/profile/view/">👤 My Profile</a></div>
+    </div>
+
+    <div class="logout">
+        <a href="/logout/">Logout</a>
+    </div>
+
+</body>
+</html>

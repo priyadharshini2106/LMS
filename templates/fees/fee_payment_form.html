@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load static custom_tags %}
+
+{% block title %}{{ title|default:"Add Fee Payment" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h3 class="card-title text-primary mb-4">
+        <i class="bi bi-credit-card-2-front"></i>
+        {{ title|default:"Add Fee Payment" }}
+      </h3>
+
+      {# Django messages (success/error) #}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} mb-3" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {# Non-field errors (e.g., form-wide validation) #}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger mb-3">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <div class="row g-3">
+          <!-- Student -->
+          <div class="col-md-6">
+            <label for="{{ form.student.id_for_label }}" class="form-label">
+              <i class="bi bi-person-circle"></i> Student
+            </label>
+            {% if form.student.errors %}
+              {{ form.student|add_class:"form-select is-invalid" }}
+              {% for e in form.student.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            {% else %}
+              {{ form.student|add_class:"form-select" }}
+            {% endif %}
+          </div>
+
+          <!-- Fee Assignment -->
+          <div class="col-md-6">
+            <label for="{{ form.fee_assignment.id_for_label }}" class="form-label">
+              <i class="bi bi-wallet2"></i> Fee Assignment
+            </label>
+            {% if form.fee_assignment.errors %}
+              {{ form.fee_assignment|add_class:"form-select is-invalid" }}
+              {% for e in form.fee_assignment.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            {% else %}
+              {{ form.fee_assignment|add_class:"form-select" }}
+            {% endif %}
+            {% if form.fee_assignment.help_text %}
+              <div class="form-text">{{ form.fee_assignment.help_text }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Payment Date -->
+          <div class="col-md-6">
+            <label for="{{ form.payment_date.id_for_label }}" class="form-label">
+              <i class="bi bi-calendar-date"></i> Payment Date
+            </label>
+            {% if form.payment_date.errors %}
+              {{ form.payment_date|add_class:"form-control is-invalid" }}
+              {% for e in form.payment_date.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            {% else %}
+              {{ form.payment_date|add_class:"form-control" }}
+            {% endif %}
+          </div>
+
+          <!-- Amount Paid -->
+          <div class="col-md-6">
+            <label for="{{ form.amount_paid.id_for_label }}" class="form-label">
+              <i class="bi bi-cash-stack"></i> Amount Paid
+            </label>
+            {% if form.amount_paid.errors %}
+              {{ form.amount_paid|add_class:"form-control is-invalid" }}
+              {% for e in form.amount_paid.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            {% else %}
+              {{ form.amount_paid|add_class:"form-control" }}
+            {% endif %}
+          </div>
+
+          <!-- Payment Mode -->
+          <div class="col-md-6">
+            <label for="{{ form.payment_mode.id_for_label }}" class="form-label">
+              <i class="bi bi-credit-card"></i> Payment Mode
+            </label>
+            {% if form.payment_mode.errors %}
+              {{ form.payment_mode|add_class:"form-select is-invalid" }}
+              {% for e in form.payment_mode.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            {% else %}
+              {{ form.payment_mode|add_class:"form-select" }}
+            {% endif %}
+          </div>
+
+          <!-- Processed By -->
+          <div class="col-md-6">
+            <label for="{{ form.processed_by.id_for_label }}" class="form-label">
+              <i class="bi bi-person-badge"></i> Processed By
+            </label>
+            {% if form.processed_by.errors %}
+              {{ form.processed_by|add_class:"form-control is-invalid" }}
+              {% for e in form.processed_by.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            {% else %}
+              {{ form.processed_by|add_class:"form-control" }}
+            {% endif %}
+          </div>
+
+          <!-- Remarks -->
+          <div class="col-md-12">
+            <label for="{{ form.remarks.id_for_label }}" class="form-label">
+              <i class="bi bi-chat-left-text"></i> Remarks
+            </label>
+            {% if form.remarks.errors %}
+              {{ form.remarks|add_class:"form-control is-invalid" }}
+              {% for e in form.remarks.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            {% else %}
+              {{ form.remarks|add_class:"form-control" }}
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-save"></i> Save Payment
+          </button>
+          <a href="{% url 'fees:fee_payment_list' %}" class="btn btn-secondary">
+            <i class="bi bi-x-circle"></i> Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Attendance{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --primary-color: #4361ee;
+    --secondary-color: #3a0ca3;
+    --accent-color: #7209b7;
+    --light-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text-dark: #1e293b;
+    --text-light: #64748b;
+    --success-color: #4cc9f0;
+    --border-radius: 16px;
+    --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+  }
+  
+  body {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e6f0ff 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  .attendance-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  /* Header Styling */
+  .page-header {
+    text-align: center;
+    margin-bottom: 50px;
+    animation: fadeIn 0.8s ease-out;
+  }
+  
+  .page-header h1 {
+    font-weight: 700;
+    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 15px;
+    font-size: 2.8rem;
+  }
+  
+  .page-header p {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  /* Toolbar Grid Layout */
+  .toolbar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+  }
+  
+  .tool-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 25px 20px;
+    text-align: center;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  
+  .tool-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  }
+  
+  .tool-card:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .icon-wrapper {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    color: white;
+    font-size: 28px;
+    transition: var(--transition);
+  }
+  
+  .tool-card:hover .icon-wrapper {
+    transform: scale(1.1);
+    background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+  }
+  
+  .tool-card .label {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+  }
+  
+  .tool-card .desc {
+    font-size: 14px;
+    color: var(--text-light);
+    line-height: 1.4;
+  }
+  
+  /* Animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .tool-card {
+    animation: fadeIn 0.5s forwards;
+    opacity: 0;
+  }
+  
+  .tool-card:nth-child(1) { animation-delay: 0.1s; }
+  .tool-card:nth-child(2) { animation-delay: 0.2s; }
+  .tool-card:nth-child(3) { animation-delay: 0.3s; }
+  .tool-card:nth-child(4) { animation-delay: 0.4s; }
+  .tool-card:nth-child(5) { animation-delay: 0.5s; }
+  .tool-card:nth-child(6) { animation-delay: 0.6s; }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .toolbar-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    
+    .page-header h1 {
+      font-size: 2.2rem;
+    }
+    
+    .icon-wrapper {
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .toolbar-grid {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    
+    .attendance-container {
+      padding: 15px;
+    }
+    
+    .page-header h1 {
+      font-size: 1.8rem;
+    }
+  }
+  
+  /* Decorative Elements */
+  .decoration {
+    position: absolute;
+    z-index: -1;
+    opacity: 0.05;
+  }
+  
+  .decoration-1 {
+    top: 10%;
+    left: 5%;
+    font-size: 120px;
+    transform: rotate(-15deg);
+  }
+  
+  .decoration-2 {
+    bottom: 10%;
+    right: 5%;
+    font-size: 120px;
+    transform: rotate(15deg);
+  }
+</style>
+
+<div class="attendance-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>📅 Student Attendance Panel</h1>
+    <p>Manage and track student attendance with our comprehensive tools</p>
+  </div>
+  
+  <!-- Decorative Elements -->
+  <div class="decoration decoration-1">📊</div>
+  <div class="decoration decoration-2">👨‍🎓</div>
+
+  <!-- Toolbar Grid -->
+  <div class="toolbar-grid">
+    <a href="{% url 'student_attendance_list' %}" class="text-decoration-none">
+      <div class="tool-card">
+        <div class="icon-wrapper">
+          <i class="fas fa-list"></i>
+        </div>
+        <div class="label">View All</div>
+        <div class="desc">Browse all attendance records</div>
+      </div>
+    </a>
+    
+    <a href="{% url 'bulk_entry_student_attendance' %}" class="text-decoration-none">
+      <div class="tool-card">
+        <div class="icon-wrapper">
+          <i class="fas fa-tasks"></i>
+        </div>
+        <div class="label">Bulk Entry</div>
+        <div class="desc">Add multiple records at once</div>
+      </div>
+    </a>
+    
+    <a href="{% url 'quick_mark_attendance' %}" class="text-decoration-none">
+      <div class="tool-card">
+        <div class="icon-wrapper">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <div class="label">Quick Mark</div>
+        <div class="desc">Fast attendance marking</div>
+      </div>
+    </a>
+    
+    <a href="{% url 'upload_attendance_excel' %}" class="text-decoration-none">
+      <div class="tool-card">
+        <div class="icon-wrapper">
+          <i class="fas fa-file-upload"></i>
+        </div>
+        <div class="label">Upload Excel</div>
+        <div class="desc">Import from spreadsheet</div>
+      </div>
+    </a>
+    
+    <a href="{% url 'student_attendance_summary' %}" class="text-decoration-none">
+      <div class="tool-card">
+        <div class="icon-wrapper">
+          <i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="label">Summary</div>
+        <div class="desc">View attendance statistics</div>
+      </div>
+    </a>
+    
+    <a href="{% url 'student_attendance_month_summary' %}" class="text-decoration-none">
+      <div class="tool-card">
+        <div class="icon-wrapper">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="label">Month Detail</div>
+        <div class="desc">Monthly breakdown</div>
+      </div>
+    </a>
+  </div>
+</div>
+{% endblock %}

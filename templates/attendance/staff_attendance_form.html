@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <style>
+    body {
+      background-color: #f0f4f8;
+      padding: 30px;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+    }
+
+    .container-box {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    .top-right-link {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 15px;
+    }
+
+    .top-right-link a {
+      color: #1d4ed8;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .top-right-link a:hover {
+      text-decoration: underline;
+    }
+
+    .form-box {
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #1e3a8a;
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 700;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 8px;
+      color: #1f2937;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 5px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .btn-success {
+      background-color: #22c55e;
+      border: none;
+    }
+
+    .btn-success:hover {
+      background-color: #16a34a;
+    }
+
+    .btn-secondary {
+      background-color: #64748b;
+      border: none;
+    }
+
+    .btn-secondary:hover {
+      background-color: #475569;
+    }
+
+    @media (max-width: 576px) {
+      .form-box {
+        padding: 20px;
+      }
+
+      .btn {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .btn-secondary {
+        margin-left: 0 !important;
+      }
+
+      .top-right-link {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container-box">
+
+  <!-- 🧾 Form box -->
+  <div class="form-box">
+    <h2>{{ title }}</h2>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        {{ form.staff.label_tag }}
+        {{ form.staff }}
+      </div>
+      <div class="form-group">
+        {{ form.date.label_tag }}
+        {{ form.date }}
+      </div>
+      <div class="form-group">
+        {{ form.status.label_tag }}
+        {{ form.status }}
+      </div>
+      <div class="form-group">
+        {{ form.remarks.label_tag }}
+        {{ form.remarks }}
+      </div>
+
+      <div class="text-center">
+        <button type="submit" class="btn btn-success">✅ Submit</button>
+        <a href="{% url 'staff_attendance_home' %}" class="btn btn-secondary ms-2">⬅️ Back</a>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

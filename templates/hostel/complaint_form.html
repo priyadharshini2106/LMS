@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if view.object %}Edit Complaint{% else %}New Complaint{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+  html, body { height: 100%; }
+  body { background: transparent !important; }
+  body::before {
+    content:""; position: fixed; inset: 0;
+    background: url("{% static 'images/bg-wave.png' %}") center/cover no-repeat fixed;
+    z-index: -1;
+  }
+
+  :root{
+    --lav-strong:#7c3aed;
+    --ink:#14121a;
+    --muted:#3f3f46;
+  }
+
+  .form-shell{ max-width: 800px; margin: 22px auto 32px; padding: 0 18px; }
+  .page-title{ font-weight: 800; font-size: 2rem; color: var(--ink); display:flex; gap:.55rem; margin-bottom: 14px; }
+
+  .form-pane{
+    background: rgba(255,255,255,.70);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(233,213,255,.55);
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(124,58,237,.12);
+    padding: 22px;
+  }
+
+  .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 18px 22px; }
+  @media (max-width: 840px){ .grid-2{ grid-template-columns: 1fr; } }
+
+  .field{ position: relative; }
+  .field label{
+    display:block;
+    font-weight:800;
+    color:var(--muted);
+    margin: 2px 0 6px 2px;
+  }
+
+  .field input[type="text"],
+  .field select,
+  .field textarea{
+    width:100%;
+    background: transparent;
+    border:none;
+    border-bottom: 2px solid rgba(0,0,0,.18);
+    padding: 10px 6px 8px 2px;
+    font-size: 1.06rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    border-radius: 8px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-bottom-color: var(--lav-strong);
+    background: rgba(255,255,255,.25);
+    box-shadow: 0 8px 24px rgba(124,58,237,.10);
+  }
+
+  .errorlist{ list-style:none; margin:.35rem 0 0; padding:0; color:#b91c1c; font-weight:700; font-size:.92rem; }
+  .actions{ margin-top: 22px; display:flex; gap: 12px; justify-content:center; flex-wrap:wrap; }
+  .btnx{ display:inline-block; padding:.9rem 1.6rem; border-radius:14px; font-weight:800; text-decoration:none !important; border:1px solid transparent; transition: all .18s ease; }
+  .btn-primaryx{ background: linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; box-shadow: 0 10px 22px rgba(124,58,237,.22); }
+  .btn-primaryx:hover{ background:#5b21b6; color:#fff; transform: translateY(-1px); }
+  .btn-cancelx{ background:#fff; color:#6b7280; border:1px solid rgba(0,0,0,.12); }
+  .btn-cancelx:hover{ background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+
+  .toastx{
+    position: fixed; right: 16px; bottom: 16px; z-index: 1060;
+    background: #10b981; color: #fff; padding: .75rem 1rem; border-radius: 12px;
+    box-shadow: 0 10px 22px rgba(0,0,0,.2); font-weight: 800;
+    display: none;
+  }
+  .toastx.show{ display:block; }
+</style>
+
+<div class="form-shell">
+  <h2 class="page-title">
+    {% if view.object %}✏️ Edit Complaint{% else %}📝 New Complaint{% endif %}
+  </h2>
+
+  <form method="post" class="form-pane" novalidate>
+    {% csrf_token %}
+    <div class="grid-2">
+      <!-- Student -->
+      <div class="field">
+        <label for="{{ form.student.id_for_label|default:'id_student' }}">Student</label>
+        {{ form.student }}
+        {% if form.student.errors %}<ul class="errorlist">{{ form.student.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Status -->
+      <div class="field">
+        <label for="{{ form.status.id_for_label|default:'id_status' }}">Status</label>
+        {{ form.status }}
+        {% if form.status.errors %}<ul class="errorlist">{{ form.status.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Description (full width) -->
+      <div class="field" style="grid-column: span 2;">
+        <label for="{{ form.description.id_for_label|default:'id_description' }}">Description</label>
+        {{ form.description }}
+        {% if form.description.errors %}<ul class="errorlist">{{ form.description.errors }}</ul>{% endif %}
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btnx btn-primaryx">Save &amp; Exit</button>
+      <a href="{% url 'hostel:complaint_list' %}" class="btnx btn-cancelx">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="toastx" id="toastx">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<script>
+  (function(){
+    const toast = document.getElementById('toastx');
+    if (toast) {
+      toast.classList.add('show');
+      setTimeout(()=>{ toast.classList.remove('show'); }, 2000);
+      setTimeout(()=>{ window.location.href = "{% url 'hostel:complaint_list' %}"; }, 1200);
+    }
+  })();
+</script>
+{% endblock %}

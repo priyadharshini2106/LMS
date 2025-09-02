@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  body {
+    background: #f3f4f6;
+  }
+
+  .subject-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  .subject-card h2 {
+    font-weight: bold;
+    color: #1e40af;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: background 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+  }
+
+  .btn-warning {
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  .table-container {
+    overflow: hidden;
+    border-radius: 10px;
+    margin-top: 1rem;
+  }
+
+  .table {
+    margin-bottom: 0;
+  }
+
+  .table thead {
+    background: linear-gradient(135deg, #4f46e5, #3b82f6);
+    color: #fff;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: #f1f5f9;
+    transition: background 0.2s ease;
+  }
+
+  .text-muted {
+    font-style: italic;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<div class="container mt-5">
+  <div class="subject-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>📚 Subjects</h2>
+      <a href="{% url 'exams:subject_add_for_class' %}" class="btn btn-primary">
+        + Add Subject (entire class)
+      </a>
+    </div>
+
+    <div class="mb-3">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label" for="{{ filter_form.class_name.id_for_label }}">Class Level</label>
+          {{ filter_form.class_name }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="{{ filter_form.subject_name.id_for_label }}">Subject Name</label>
+          {{ filter_form.subject_name }}
+        </div>
+        <div class="col-md-5 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Filter</button>
+          <a href="{% url 'exams:subject_list' %}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-container">
+      <table class="table table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Subject Name</th>
+            <th>Code</th>
+            <th>Class Level</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for subject in subjects %}
+          <tr>
+            <td>{{ subject.name }}</td>
+            <td>{{ subject.code }}</td>
+            <td>
+              {{ subject.class_level.class_name }} ({{ subject.class_level.section }})
+            </td>
+            <td>
+              <a href="{% url 'exams:edit_subject' subject.pk %}" class="btn btn-sm btn-warning">
+                ✏️ Edit
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center text-muted">No subjects found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

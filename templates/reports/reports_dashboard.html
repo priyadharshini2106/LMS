@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  :root {
+    --primary: #4361ee;
+    --primary-dark: #3a56d4;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #e53935;
+    --warning: #ffc107;
+    --info: #17a2b8;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.05), 0 6px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+  }
+
+  .dashboard-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+
+  .dashboard-header h2 {
+    font-weight: 800;
+    color: var(--primary);
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    display: inline-block;
+  }
+
+  .dashboard-header h2:after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-radius: 2px;
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .report-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    border: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 1.2rem 1.5rem;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .card-header h5 {
+    font-weight: 600;
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-description {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .filter-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    align-items: end;
+  }
+
+  .form-control {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    transition: var(--transition);
+  }
+
+  .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+  }
+
+  .btn-filter {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+
+  .btn-filter:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border-left: 4px solid var(--primary);
+  }
+
+  .stat-item.present {
+    border-left-color: var(--success);
+  }
+
+  .stat-item.absent {
+    border-left-color: var(--danger);
+  }
+
+  .stat-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .btn-report {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+    text-align: center;
+    transition: var(--transition);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .btn-report:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .filter-form {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Animation for cards */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .report-card {
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
+  }
+
+  .report-card:nth-child(1) { animation-delay: 0.1s; }
+  .report-card:nth-child(2) { animation-delay: 0.2s; }
+  .report-card:nth-child(3) { animation-delay: 0.3s; }
+  .report-card:nth-child(4) { animation-delay: 0.4s; }
+</style>
+
+<div class="container py-4">
+  <div class="dashboard-header">
+    <h2>📊 Reports Dashboard</h2>
+    <p class="text-muted">Access and analyze all institutional reports in one place</p>
+  </div>
+
+  <div class="dashboard-grid">
+
+    <!-- Student Attendance Report -->
+    <div class="report-card">
+      <div class="card-header">
+        <i class="fas fa-user-graduate"></i>
+        <h5>Student Attendance</h5>
+      </div>
+      <div class="card-body">
+        <p class="card-description">View and filter student attendance records for any date</p>
+        
+        <form method="get" class="filter-form">
+          <div>
+            <label class="form-label">Select Date</label>
+            <input type="date" name="date" class="form-control" value="{{ selected_date|date:'Y-m-d' }}">
+          </div>
+          <button type="submit" class="btn-filter">
+            <i class="fas fa-filter"></i> Apply
+          </button>
+        </form>
+
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">
+              <i class="fas fa-users"></i>
+              <span>Total Students</span>
+            </div>
+            <div class="stat-value">{{ total_students }}</div>
+          </div>
+          
+          <div class="stat-item present">
+            <div class="stat-label">
+              <i class="fas fa-check-circle"></i>
+              <span>Present</span>
+            </div>
+            <div class="stat-value text-success">{{ total_present }}</div>
+          </div>
+          
+          <div class="stat-item absent">
+            <div class="stat-label">
+              <i class="fas fa-times-circle"></i>
+              <span>Absent</span>
+            </div>
+            <div class="stat-value text-danger">{{ total_absent }}</div>
+          </div>
+        </div>
+
+        <a href="{% url 'student_attendance_list' %}?date={{ selected_date|date:'Y-m-d' }}" class="btn-report">
+          <i class="fas fa-file-alt"></i> View Full Report
+        </a>
+      </div>
+    </div>
+
+    <!-- Staff Attendance Report -->
+    <div class="report-card">
+      <div class="card-header">
+        <i class="fas fa-chalkboard-teacher"></i>
+        <h5>Staff Attendance</h5>
+      </div>
+      <div class="card-body">
+        <p class="card-description">View and filter staff attendance records for any date</p>
+        
+        <form method="get" class="filter-form">
+          <div>
+            <label class="form-label">Select Date</label>
+            <input type="date" name="date" class="form-control" value="{{ selected_date|date:'Y-m-d' }}">
+          </div>
+          <button type="submit" class="btn-filter">
+            <i class="fas fa-filter"></i> Apply
+          </button>
+        </form>
+
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">
+              <i class="fas fa-users"></i>
+              <span>Total Staff</span>
+            </div>
+            <div class="stat-value">{{ total_staff }}</div>
+          </div>
+          
+          <div class="stat-item present">
+            <div class="stat-label">
+              <i class="fas fa-check-circle"></i>
+              <span>Present</span>
+            </div>
+            <div class="stat-value text-success">{{ staff_present }}</div>
+          </div>
+          
+          <div class="stat-item absent">
+            <div class="stat-label">
+              <i class="fas fa-times-circle"></i>
+              <span>Absent</span>
+            </div>
+            <div class="stat-value text-danger">{{ staff_absent }}</div>
+          </div>
+        </div>
+
+        <a href="{% url 'staff_attendance_list' %}?date={{ selected_date|date:'Y-m-d' }}" class="btn-report">
+          <i class="fas fa-file-alt"></i> View Full Report
+        </a>
+      </div>
+    </div>
+
+    <!-- Fees Report Card (commented out in original) -->
+    <!-- <div class="report-card">
+      <div class="card-header">
+        <i class="fas fa-money-bill-wave"></i>
+        <h5>Fees Report</h5>
+      </div>
+      <div class="card-body">
+        <p class="card-description">Download fee collection reports in various formats</p>
+        
+        <div class="stats-grid" style="margin-bottom: auto;">
+          <div class="stat-item">
+            <div class="stat-label">
+              <i class="fas fa-file-pdf"></i>
+              <span>PDF Report</span>
+            </div>
+          </div>
+          
+          <div class="stat-item">
+            <div class="stat-label">
+              <i class="fas fa-file-excel"></i>
+              <span>Excel Report</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem;">
+          <a href="{% url 'fees_pdf_report' %}" class="btn-report" style="background: #dc3545; color: white; border-color: #dc3545;">
+            <i class="fas fa-download"></i> PDF
+          </a>
+          <a href="{% url 'fees_excel_report' %}" class="btn-report" style="background: #198754; color: white; border-color: #198754;">
+            <i class="fas fa-download"></i> Excel
+          </a>
+        </div>
+      </div>
+    </div> -->
+
+  </div>
+</div>
+
+<script>
+  // Add today's date as default if no date is selected
+  document.addEventListener('DOMContentLoaded', function() {
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (!urlParams.has('date')) {
+      const today = new Date().toISOString().split('T')[0];
+      dateInputs.forEach(input => {
+        input.value = today;
+      });
+    }
+  });
+</script>
+
+{% endblock %}

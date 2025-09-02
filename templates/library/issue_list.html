@@ -1,0 +1,68 @@
+
+ {% extends 'base.html' %}
+
+{% block title %}Issues Books{% endblock %}
+
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Issued Books</title>
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+</head>
+<body>
+<div class="container mt-4">
+  <h2 class="text-primary">Issued Books</h2>
+  <a href="{% url 'issue_book' %}" class="btn btn-success mb-3">+ Issue Book</a>
+  <table class="table table-bordered">
+    <thead class="table-dark">
+      <tr>
+        <th>Student</th>
+        <th>Book</th>
+        <th>Issue Date</th>
+        <th>Due Date</th>
+        <th>Return Date</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for issue in issues %}
+      <tr>
+        <td>{{ issue.student.full_name }}</td>
+        <td>{{ issue.book.title }}</td>
+        <td>{{ issue.issue_date }}</td>
+        <td>{{ issue.due_date }}</td>
+        <td>{{ issue.return_date|default:"—" }}</td>
+        <td>
+          {% if issue.return_date %}
+            ✅ Returned
+          {% elif issue.is_overdue %}
+            ❌ Overdue
+          {% else %}
+            ⏳ Issued
+          {% endif %}
+        </td>
+        <td>
+          {% if not issue.return_date %}
+            <form method="post" action="{% url 'return_book' issue.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="return_date" value="{{ today|date:'Y-m-d' }}">
+              <button type="submit" class="btn btn-sm btn-info">Return</button>
+            </form>
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="text-center">No book issues found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
+{% endblock %}

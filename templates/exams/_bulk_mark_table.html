@@ -1,0 +1,199 @@
+{# templates/exams/_bulk_mark_table.html #}
+<style>
+  /* ------- Card & header ------- */
+  .bulk-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(17, 38, 146, .06), 0 4px 10px rgba(17, 38, 146, .04);
+  }
+  .bulk-header {
+    display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .75rem;
+    padding:12px 16px; border-bottom:1px solid #edf0f5; background:#f9fafb;
+    border-top-left-radius:14px; border-top-right-radius:14px;
+  }
+  .chip {
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:6px 10px; border-radius:999px; background:#eef2ff; color:#1f2937;
+    font-weight:600; font-size:.85rem; border:1px solid #e0e7ff;
+  }
+  .chip b { font-weight:700; color:#111827; }
+
+  /* ------- Table ------- */
+  .table-wrap { max-height:60vh; overflow:auto; }
+  .table-bulk {
+    width:100%; border-collapse:separate; border-spacing:0;
+    border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff;
+  }
+  .table-bulk thead th {
+    position:sticky; top:0; z-index:2;
+    background:#f3f4f6; color:#111827; font-weight:700; border-bottom:1px solid #e5e7eb;
+  }
+  .table-bulk th, .table-bulk td { padding:10px 12px; vertical-align:middle; }
+  .table-bulk tbody tr:nth-child(even) { background:#fafafa; }
+  .table-bulk tbody tr:hover { background:#f0f7ff; }
+
+  /* ------- Inputs ------- */
+  .table-bulk .form-select, .table-bulk .form-control {
+    border:1px solid #d1d5db; border-radius:10px; padding:8px 10px; font-size:.95rem; background:#fff;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .table-bulk .form-select:focus, .table-bulk .form-control:focus {
+    outline:none; border-color:#7F7FD5; box-shadow:0 0 0 3px rgba(127,127,213,.22);
+  }
+  .text-danger.small { margin-top:4px; }
+
+  /* Pass/Fail coloring for Marks Obtained inputs */
+  .input-pass {
+    color:#146c43;           /* green-ish text */
+    border-color:#198754;    /* green border */
+    background:#f0fff4;      /* faint green bg */
+  }
+  .input-fail {
+    color:#842029;           /* red-ish text */
+    border-color:#dc3545;    /* red border */
+    background:#fff5f5;      /* faint red bg */
+  }
+
+  /* ------- Avatars ------- */
+  .student-cell { display:flex; align-items:center; gap:10px; }
+  .avatar { width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #e5e7eb; background:#fff; }
+  .avatar-fallback {
+    width:36px; height:36px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    background:#e5e7eb; color:#374151; font-weight:700; border:1px solid #d1d5db;
+  }
+
+  /* ------- Save bar ------- */
+  .save-bar {
+    position:sticky; bottom:0; display:flex; justify-content:flex-end; gap:.5rem;
+    background:#ffffff; padding:10px; border-top:1px solid #edf0f5;
+    border-bottom-left-radius:14px; border-bottom-right-radius:14px;
+  }
+
+  .num-cell { width:170px; }
+  .max-cell { width:140px; }
+  .roll-cell { width:90px; white-space:nowrap; }
+  .schedule-cell { min-width:240px; }
+</style>
+
+<div class="alert alert-success d-none" id="flash"></div>
+
+<form id="bulk-mark-form" method="post" class="bulk-card"
+      data-after-save-url="{% url 'exams:exam_mark_list' %}">
+  {% csrf_token %}
+  {{ formset.management_form }}
+
+  <div class="bulk-header">
+    <span class="chip"><b>Section:</b> {{ section }}</span>
+    <span class="chip"><b>Term:</b> {{ term.name }}</span>
+    <span class="chip"><b>Subject:</b> {{ subject.name }}</span>
+    {% if schedule %}
+      <span class="chip"><b>Exam:</b> {{ schedule.exam_name }} (Max: {{ schedule.max_marks }})</span>
+    {% endif %}
+  </div>
+
+  <div class="table-wrap">
+    <table class="table-bulk">
+      <thead>
+        <tr>
+          <th class="roll-cell">Roll</th>
+          <th>Student</th>
+          <th class="schedule-cell">Exam Schedule</th>
+          <th class="num-cell">Marks Obtained</th>
+          <th class="max-cell">Max Marks</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+        <tr>
+          <td class="roll-cell">{{ form.instance.student.roll_no }}</td>
+          <td>
+            <div class="student-cell">
+              {% if form.instance.student.photo %}
+                <img src="{{ form.instance.student.photo.url }}" class="avatar" alt="">
+              {% else %}
+                <span class="avatar-fallback">{{ form.instance.student.name|slice:":1" }}</span>
+              {% endif %}
+              <div style="font-weight:600">{{ form.instance.student.name }}</div>
+            </div>
+          </td>
+
+          {# ------- Exam Schedule: manual select so we can add data-max-marks ------- #}
+          <td class="schedule-cell">
+            {% with field=form.exam_schedule %}
+              {% if field.field.queryset.exists %}
+                <select
+                  name="{{ field.html_name }}"
+                  id="{{ field.id_for_label }}"
+                  class="form-select exam-schedule-select">
+                  <option value="">— Select —</option>
+                  {% with current=field.value|stringformat:"s" %}
+                    {% for es in field.field.queryset %}
+                      <option
+                        value="{{ es.pk }}"
+                        data-max-marks="{{ es.max_marks|default_if_none:'' }}"
+                        {% if current == es.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ es.exam_name }} — {{ es.exam_date|date:"M d, Y" }}
+                      </option>
+                    {% endfor %}
+                  {% endwith %}
+                </select>
+              {% else %}
+                <div class="text-muted small">
+                  No exam schedules for this Section/Term/Subject.
+                </div>
+              {% endif %}
+            {% endwith %}
+            {% if form.exam_schedule.errors %}
+              <div class="text-danger small">{{ form.exam_schedule.errors|join:", " }}</div>
+            {% endif %}
+          </td>
+
+          {# ------- Marks obtained ------- #}
+          <td class="num-cell">
+            {{ form.id }} {# hidden id field required by formset #}
+            {{ form.marks_obtained }}
+            {% if form.marks_obtained.errors %}
+              <div class="text-danger small">{{ form.marks_obtained.errors|join:", " }}</div>
+            {% endif %}
+          </td>
+
+          {# ------- Max Marks ------- #}
+          <td class="max-cell">
+            {{ form.max_marks }}
+            {% if form.max_marks.errors %}
+              <div class="text-danger small">{{ form.max_marks.errors|join:", " }}</div>
+            {% endif %}
+          </td>
+
+          {# ------- Remarks ------- #}
+          <td>
+            {{ form.remarks }}
+            {% if form.remarks.errors %}
+              <div class="text-danger small">{{ form.remarks.errors|join:", " }}</div>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted" style="padding:20px;">No rows to edit.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="save-bar">
+    <button type="submit" class="btn btn-primary">Save All</button>
+  </div>
+</form>
+
+{# Optional: keep if other JS needs it #}
+<script type="application/json" id="exam-schedule-max">
+{
+{% for es in exam_schedules %}
+  "{{ es.id }}": {{ es.max_marks|default_if_none:"0" }}{% if not forloop.last %},{% endif %}
+{% endfor %}
+}
+</script>

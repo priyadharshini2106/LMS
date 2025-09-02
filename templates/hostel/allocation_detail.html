@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Allocation Detail{% endblock %}
+{% block content %}
+<h2>Allocation Detail</h2>
+<div class="card p-4">
+    <p><strong>Student:</strong> {{ object.student }}</p>
+    <p><strong>Hostel:</strong> {{ object.hostel }}</p>
+    <p><strong>Room:</strong> {{ object.room }}</p>
+    <p><strong>Bed:</strong> {{ object.bed }}</p>
+    <p><strong>Status:</strong> {{ object.get_status_display }}</p>
+    <p><strong>Start Date:</strong> {{ object.start_date }}</p>
+    <p><strong>End Date:</strong> {{ object.end_date|default:"-" }}</p>
+    <p><strong>Notes:</strong> {{ object.notes }}</p>
+</div>
+<a href="{% url 'hostel:allocation_update' object.pk %}" class="btn btn-warning mt-3">Edit</a>
+<a href="{% url 'hostel:allocation_list' %}" class="btn btn-secondary mt-3">Back</a>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Attendance Records{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+  <h2 class="mb-5 text-center">📋 Student Attendance Records</h2>
+
+  <!-- 🔍 Filter & Summary Row -->
+<form method="get">
+  <div class="row mb-2">
+    <!-- 📅 Date Filter -->
+    <div class="col-md-2">
+      <label for="date" class="form-label">📅 Date:</label>
+      <input type="date" id="date" name="date" class="form-control"
+             value="{{ selected_date|date:'Y-m-d' }}">
+    </div>
+
+    <!-- 🏫 Class Filter -->
+    <div class="col-md-2">
+      <label for="class_name" class="form-label">🏫 Class:</label>
+      <select id="class_name" name="class_name" class="form-select">
+        <option value="">All</option>
+        {% for class in class_list %}
+          <option value="{{ class }}" {% if class == selected_class %}selected{% endif %}>{{ class }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- 🏷️ Section Filter -->
+    <div class="col-md-2">
+      <label for="section" class="form-label">🏷️ Section:</label>
+      <select id="section" name="section" class="form-select">
+        <option value="">All</option>
+        {% for sec in section_list %}
+          <option value="{{ sec }}" {% if sec == selected_section %}selected{% endif %}>{{ sec }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- 🔢 Roll No Filter -->
+    <div class="col-md-2">
+      <label for="roll_no" class="form-label">🔢 Roll No:</label>
+      <input type="text" id="roll_no" name="roll_no" class="form-control"
+             value="{{ selected_roll_no }}">
+    </div>
+
+    <!-- 🔍 Submit Button -->
+    <div class="col-md-2 mb-4 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary w-100 mb-2">Search</button>
+    </div>
+
+    <!-- 📊 Summary -->
+    <div class="col-md-2 d-flex align-items-end justify-content-end">
+      <div class="text-center w-100 border border-primary rounded-3 shadow-sm p-2 bg-light">
+        <p class="mb-1">👥 <strong>Total Students:</strong> {{ total_students }}</p>
+        <p class="mb-1 text-success">✅ <strong>Present:</strong> {{ total_present }}</p>
+        <p class="mb-1 text-danger">❌ <strong>Absent:</strong> {{ total_absent }}</p>
+      </div>
+    </div>
+  </div>
+</form>
+
+
+  <!-- ➕ Add Attendance Button -->
+  <div class="text-end mb-3">
+    <a href="{% url 'add_student_attendance' %}" class="btn btn-primary">+ Add Attendance</a>
+  </div>
+
+  <!-- 📊 Attendance Table -->
+  <table class="table table-bordered table-striped">
+    <thead class="table-primary">
+      <tr>
+        <th>Admission No</th>
+        <th>Roll No</th>
+        <th>Student</th>
+        <th>Class</th>
+        <th>Section</th> 
+        <th>Date</th>
+        <th>Status</th>
+        <th>Remarks</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in records %}
+      <tr>
+        <td>{{ record.student.admission_number }}</td>
+        <td>{{ record.student.roll_no }}</td>
+        <td>{{ record.student.name }}</td>
+        <td>{{ record.student.class_name }}</td>
+        <td>{{ record.student.section }}</td>
+        <td>{{ record.date }}</td>
+        <td>
+          {% if record.status == 'Present' %}
+            <span class="badge bg-success">Present</span>
+          {% elif record.status == 'Absent' %}
+            <span class="badge bg-danger">Absent</span>
+          {% elif record.status == 'Leave' %}
+            <span class="badge bg-warning text-dark">Leave</span>
+          {% else %}
+            {{ record.status }}
+          {% endif %}
+        </td>
+        <td>{{ record.remarks }}</td>
+        <td>
+          <a href="{% url 'edit_student_attendance' record.id %}" class="btn btn-sm btn-warning">Edit</a>
+          <a href="{% url 'delete_student_attendance' record.id %}" class="btn btn-sm btn-danger">Delete</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center">No attendance records found for this filter.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 🔁 Auto-submit form on date change -->
+<script>
+  document.getElementById('date').addEventListener('change', function () {
+    this.form.submit();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Exam Schedule List</title>
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+</head>
+<body>
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="text-primary">📆 Exam Schedule List</h2>
+      <a href="{% url 'add_exam_schedule' %}" class="btn btn-success">+ Add Exam Schedule</a>
+    </div>
+
+    <table class="table table-bordered table-striped">
+      <thead class="table-dark">
+        <tr>
+          <th>Exam Name</th>
+          <th>Class</th>
+          <th>Term</th>
+          <th>Subject</th>
+          <th>Exam Date</th>
+          <th>Max Marks</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for exam in exams %}
+        <tr>
+          <td>{{ exam.exam_name }}</td>
+          <td>{{ exam.class_level.name }} ({{ exam.class_level.medium }})</td>
+          <td>{{ exam.term.name }}</td>
+          <td>{{ exam.subject.name }}</td>
+          <td>{{ exam.exam_date }}</td>
+          <td>{{ exam.max_marks }}</td>
+          <td>
+            <a href="{% url 'edit_exam_schedule' exam.pk %}" class="btn btn-sm btn-warning">Edit</a>
+            <a href="{% url 'bulk_exam_mark_entry' exam.term.id exam.subject.id exam.class_level.id %}" class="btn btn-sm btn-primary mt-1">Enter Marks</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">No exam schedules found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

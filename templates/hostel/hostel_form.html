@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{% if view.object %}Edit Hostel{% else %}Add Hostel{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+  html, body { height: 100%; }
+  body { background: transparent !important; }
+  body::before {
+    content:""; position: fixed; inset: 0;
+    background: url("{% static 'images/bg-wave.png' %}") center/cover no-repeat fixed;
+    z-index: -1;
+  }
+
+  :root{
+    --lav-strong:#7c3aed;
+    --ink:#14121a;
+    --muted:#3f3f46;
+  }
+
+  .form-shell{ max-width: 1100px; margin: 22px auto 32px; padding: 0 18px; }
+  .page-title{ font-weight: 800; font-size: 2rem; color: var(--ink); display:flex; gap:.55rem; margin-bottom: 14px; }
+
+  .form-pane{
+    background: rgba(255,255,255,.70);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(233,213,255,.55);
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(124,58,237,.12);
+    padding: 22px;
+  }
+
+  .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 18px 22px; }
+  @media (max-width: 840px){ .grid-2{ grid-template-columns: 1fr; } }
+
+  .field{ position: relative; }
+  .field label{
+    display:block;
+    font-weight:800;
+    color:var(--muted);
+    margin: 2px 0 6px 2px;
+  }
+
+  .field input[type="text"],
+  .field input[type="tel"],
+  .field input[type="number"],
+  .field input[type="file"],
+  .field select{
+    width:100%;
+    background: transparent;
+    border:none;
+    border-bottom: 2px solid rgba(0,0,0,.18);
+    padding: 10px 6px 8px 2px;
+    font-size: 1.06rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    border-radius: 8px;
+  }
+  .field input:focus, .field select:focus{
+    border-bottom-color: var(--lav-strong);
+    background: rgba(255,255,255,.25);
+    box-shadow: 0 8px 24px rgba(124,58,237,.10);
+  }
+  .field input[type="file"]{ padding-left: 0; border-bottom-style: dashed; }
+
+  .helptext{ display:block; font-size:.85rem; color:#6b7280; margin-top:4px; }
+
+  .errorlist{ list-style:none; margin:.35rem 0 0; padding:0; color:#b91c1c; font-weight:700; font-size:.92rem; }
+
+  .actions{ margin-top: 22px; display:flex; gap: 12px; justify-content:center; flex-wrap:wrap; }
+  .btnx{ display:inline-block; padding:.9rem 1.6rem; border-radius:14px; font-weight:800; text-decoration:none !important; border:1px solid transparent; transition: all .18s ease; }
+  .btn-primaryx{ background: linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; box-shadow: 0 10px 22px rgba(124,58,237,.22); }
+  .btn-primaryx:hover{ background:#5b21b6; color:#fff; transform: translateY(-1px); }
+  .btn-cancelx{ background:#fff; color:#6b7280; border:1px solid rgba(0,0,0,.12); }
+  .btn-cancelx:hover{ background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+
+  /* image preview */
+  .preview-wrap{ display:flex; align-items:center; gap:12px; margin-top:10px; }
+  .avatar-prev{
+    width:64px; height:64px; border-radius:12px; overflow:hidden;
+    border:2px solid rgba(233,213,255,.85); box-shadow:0 2px 6px rgba(0,0,0,.08);
+    background:#fff;
+  }
+  .avatar-prev img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .clear-btn{ background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:10px; padding:.35rem .6rem; font-weight:700; font-size:.9rem; }
+  .clear-btn:hover{ background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+
+  /* tiny toast */
+  .toastx{
+    position: fixed; right: 16px; bottom: 16px; z-index: 1060;
+    background: #10b981; color: #fff; padding: .75rem 1rem; border-radius: 12px;
+    box-shadow: 0 10px 22px rgba(0,0,0,.2); font-weight: 800;
+    display: none;
+  }
+  .toastx.show{ display:block; }
+</style>
+
+<div class="form-shell">
+  <h2 class="page-title">
+    {% if view.object %}✏️ Edit Hostel{% else %}🏠 Add Hostel{% endif %}
+  </h2>
+
+  <form method="post" enctype="multipart/form-data" class="form-pane" novalidate>
+    {% csrf_token %}
+
+    <div class="grid-2">
+      <!-- Name -->
+      <div class="field">
+        <label for="{{ form.name.id_for_label|default:'id_name' }}">Name</label>
+        {{ form.name }}
+        {% if form.name.errors %}<ul class="errorlist">{{ form.name.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Code -->
+      <div class="field">
+        <label for="{{ form.code.id_for_label|default:'id_code' }}">Code</label>
+        {{ form.code }}
+        {% if form.code.errors %}<ul class="errorlist">{{ form.code.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Capacity -->
+      <div class="field">
+        <label for="{{ form.capacity.id_for_label|default:'id_capacity' }}">Capacity</label>
+        {{ form.capacity }}
+        {% if form.capacity.errors %}<ul class="errorlist">{{ form.capacity.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Gender policy -->
+      <div class="field">
+        <label for="{{ form.gender_policy.id_for_label|default:'id_gender_policy' }}">Gender policy</label>
+        {{ form.gender_policy }}
+        {% if form.gender_policy.errors %}<ul class="errorlist">{{ form.gender_policy.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Warden Name -->
+      <div class="field">
+        <label for="{{ form.warden_name.id_for_label|default:'id_warden_name' }}">Warden Name</label>
+        {{ form.warden_name }}
+        {% if form.warden_name.errors %}<ul class="errorlist">{{ form.warden_name.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Warden Contact -->
+      <div class="field">
+        <label for="{{ form.warden_contact.id_for_label|default:'id_warden_contact' }}">Warden Contact Number</label>
+        {{ form.warden_contact }}
+        <small class="helptext">Example: +91 9876543210</small>
+        {% if form.warden_contact.errors %}<ul class="errorlist">{{ form.warden_contact.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Warden Image + live preview -->
+      <div class="field">
+        <label for="{{ form.warden_image.id_for_label|default:'id_warden_image' }}">Warden Image</label>
+        {{ form.warden_image }}
+        {% if form.warden_image.errors %}<ul class="errorlist">{{ form.warden_image.errors }}</ul>{% endif %}
+
+        <div class="preview-wrap">
+          <div class="avatar-prev">
+            <img id="imgPreview"
+                 src="{% if view.object and view.object.warden_image %}{{ view.object.warden_image.url }}{% else %}{% static 'images/default_coed.png' %}{% endif %}"
+                 alt="Preview">
+          </div>
+          <button type="button" id="clearImgBtn" class="clear-btn">Remove image</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btnx btn-primaryx">Save &amp; Exit</button>
+      <a href="{% url 'hostel:hostel_list' %}" class="btnx btn-cancelx">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="toastx" id="toastx">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<script>
+  // Live preview for warden_image
+  (function(){
+    const fileInput = document.getElementById('{{ form.warden_image.id_for_label|default:"id_warden_image" }}');
+    const imgPreview = document.getElementById('imgPreview');
+    const clearBtn = document.getElementById('clearImgBtn');
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function(){
+        const file = this.files && this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => { imgPreview.src = e.target.result; };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function(){
+        if (fileInput) fileInput.value = '';
+        imgPreview.src = "{% static 'images/default_coed.png' %}";
+      });
+    }
+  })();
+
+  // Optional toast
+  (function(){
+    const toast = document.getElementById('toastx');
+    if (toast) {
+      toast.classList.add('show');
+      setTimeout(()=>{ toast.classList.remove('show'); }, 2000);
+      setTimeout(()=>{ window.location.href = "{% url 'hostel:hostel_list' %}"; }, 1200);
+    }
+  })();
+</script>
+
+<!-- Voice dictation -->
+<script src="{% static 'js/script.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const fields = document.querySelectorAll('input[type="text"], input[type="number"], input[type="tel"]');
+    
+    // Automatically start dictation for the first field
+    if (fields.length > 0) {
+      fields[0].focus();
+      startDictation(fields[0]);
+    }
+
+    // Start dictation when focusing on any field
+    fields.forEach(field => {
+      field.addEventListener('focus', () => startDictation(field));
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Students from Excel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">📥 Upload Students from Excel</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="mb-4">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="excel_file" class="form-label">Select Excel File (.xlsx)</label>
+      <input type="file" name="excel_file" id="excel_file" accept=".xlsx" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Upload</button>
+    <a href="{% url 'student_list' %}" class="btn btn-secondary ms-2">← Back to List</a>
+  </form>
+
+  <div class="card">
+    <div class="card-header">📄 Expected Excel Format</div>
+    <div class="card-body">
+      <p>The Excel file should contain the following columns in this exact order:</p>
+      <pre>
+Name, Gender, DOB (yyyy-mm-dd), ClassSectionID, AcademicYearID, FatherName, MotherName,
+GuardianName, GuardianRelation, Address, ContactNumber, Email,
+Aadhaar, Religion, Community, BloodGroup, PreviousSchool,
+TransferCertificateNumber, DateOfLeaving (optional), Status
+      </pre>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Hostel Dashboard{% endblock %}
+
+{% block content %}
+<style>
+  .wrap{max-width:1100px;margin:20px auto;padding:0 16px}
+  .hero{background:linear-gradient(135deg,#4361ee,#3f37c9);color:#fff;border-radius:14px;padding:20px 22px;box-shadow:0 8px 22px rgba(67,97,238,.25);margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .card{background:#fff;border:1px solid #eef1f5;border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+  .kpi{display:flex;align-items:center;gap:12px}
+  .kpi .icon{width:42px;height:42px;border-radius:10px;display:grid;place-items:center}
+  .i1{background:rgba(16,172,132,.15);color:#10ac84}
+  .i2{background:rgba(245,59,87,.15);color:#f53b57}
+  .i3{background:rgba(159,90,253,.15);color:#9f5afd}
+  .i4{background:rgba(255,159,67,.18);color:#ff9f43}
+  .i5{background:rgba(0,184,148,.18);color:#00b894}
+  .num{font-size:1.6rem;font-weight:800;line-height:1}
+  .label{color:#6b7280;font-weight:700}
+  .links{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:18px}
+  .link{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #eef1f5;border-radius:12px;padding:14px;text-decoration:none;color:#111;transition:.15s}
+  .link:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.08)}
+  .link i{width:26px;text-align:center}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <h2 style="margin:0 0 6px">🏠 Hostel</h2>
+    <div>Overview of hostels, allocations, payments & requests.</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="kpi">
+        <div class="icon i1"><i class="fa-solid fa-hotel"></i></div>
+        <div>
+          <div class="num">{{ total_hostels|default:"0" }}</div>
+          <div class="label">Total Hostels</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="kpi">
+        <div class="icon i2"><i class="fa-solid fa-bed"></i></div>
+        <div>
+          <div class="num">{{ alloc_active|default:"0" }}</div>
+          <div class="label">Active Allocations</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="kpi">
+        <div class="icon i3"><i class="fa-solid fa-receipt"></i></div>
+        <div>
+          <div class="num">{{ payments_total|default:"0" }}</div>
+          <div class="label">Payments Recorded</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="kpi">
+        <div class="icon i4"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+          <div class="num">{{ complaints_open|default:"0" }}</div>
+          <div class="label">Open Complaints</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="kpi">
+        <div class="icon i5"><i class="fa-solid fa-right-from-bracket"></i></div>
+        <div>
+          <div class="num">{{ outpasses_pending|default:"0" }}</div>
+          <div class="label">Pending Outpasses</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="links">
+    <a href="{% url 'hostel:hostel_list' %}" class="link"><i class="fa-solid fa-building"></i> Hostels</a>
+    <a href="{% url 'hostel:room_list' %}" class="link"><i class="fa-solid fa-door-open"></i> Rooms</a>
+    <a href="{% url 'hostel:allocation_list' %}" class="link"><i class="fa-solid fa-person-booth"></i> Allocations</a>
+    <a href="{% url 'hostel:payment_list' %}" class="link"><i class="fa-solid fa-money-bill-wave"></i> Payments</a>
+    <a href="{% url 'hostel:visitor_list' %}" class="link"><i class="fa-solid fa-user-group"></i> Visitors</a>
+    <a href="{% url 'hostel:outpass_list' %}" class="link"><i class="fa-solid fa-person-walking-arrow-right"></i> Outpasses</a>
+    <a href="{% url 'hostel:complaint_list' %}" class="link"><i class="fa-solid fa-comment-dots"></i> Complaints</a>
+  </div>
+</div>
+{% endblock %}

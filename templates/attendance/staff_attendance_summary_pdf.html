@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance Report — {{ staff.full_name }} ({{ month_param }})</title>
+  <style>
+    body { font-family: sans-serif; margin: 1em; }
+    h1, h2 { text-align: center; margin-bottom: 0.5em; }
+    p { text-align: center; margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+    th, td { border: 1px solid #333; padding: 0.5em; text-align: left; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <h1>{{ school_name }}</h1>
+  <p>{{ school_address }}</p>
+  <h2>Attendance for {{ staff.full_name }}</h2>
+  <p><strong>Month:</strong> {{ month_param }}</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in records %}
+      <tr>
+        <td>{{ record.date }}</td>
+        <td>{{ record.status }}</td>
+        <td>{{ record.remarks }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

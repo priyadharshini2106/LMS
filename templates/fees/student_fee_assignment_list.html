@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Student Fee Assignments{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #3b82f6;
+    --secondary: #10b981;
+    --accent: #f59e0b;
+    --danger: #ef4444;
+    --light: #f9fafb;
+    --dark: #1f2937;
+    --gray: #6b7280;
+    --light-gray: #e5e7eb;
+    --border-radius: 8px;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    background-color: #f3f4f6;
+    color: var(--dark);
+    padding: 20px;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 1800px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .header h1 {
+    color: var(--primary);
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+
+  .header p {
+    color: var(--gray);
+    font-size: 1.1rem;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    background: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 25px;
+  }
+
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-light);
+  }
+
+  .btn-secondary {
+    background: var(--secondary);
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background: #0da271;
+  }
+
+  .btn-outline-secondary {
+    background: transparent;
+    color: var(--gray);
+    border: 1px solid var(--light-gray);
+  }
+
+  .btn-outline-secondary:hover {
+    background: var(--light-gray);
+    color: var(--dark);
+  }
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .table-wrapper {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 30px;
+  }
+
+  .table-header {
+    padding: 15px 20px;
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+    max-height: 70vh;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1200px;
+  }
+
+  thead {
+    background: var(--primary);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--light-gray);
+    transition: background 0.2s;
+  }
+
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  td {
+    padding: 14px 12px;
+    font-size: 0.9rem;
+    color: var(--dark);
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .text-end {
+    text-align: right;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .status-paid {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .status-pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .empty-table {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray);
+    min-width: 100%;
+  }
+
+  .empty-table i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: #d1d5db;
+  }
+
+  .empty-table p {
+    font-size: 1.1rem;
+  }
+
+  .scroll-indicator {
+    display: none;
+    padding: 8px 15px;
+    background: var(--primary-light);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 1200px) {
+    .scroll-indicator {
+      display: inline-block;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .top-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .action-buttons {
+      justify-content: center;
+    }
+
+    .table-header {
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+    }
+  }
+</style>
+
+<div class="container">
+  <div class="header">
+    <h1><i class="fas fa-money-bill-wave"></i> Student Fee Assignments</h1>
+    <p>Manage all student fee assignments in one place</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="action-buttons">
+      <a href="{% url 'fees:fee_cards_report' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-collection"></i> Fee Cards
+      </a>
+      <a href="{% url 'fees:assign_fee_to_student' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Assign New
+      </a>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <!-- <div class="table-header">
+      <span>Fee Assignments List</span>
+      <span class="scroll-indicator">
+        <i class="fas fa-arrows-alt-h"></i> Scroll to view all columns
+      </span>
+    </div> -->
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Roll No</th>
+            <th>Student</th>
+            <th>Class</th>
+            <th>Section</th>
+            <th>Fee Category</th>
+            <th class="text-end">Original</th>
+            <th class="text-end">Discount</th>
+            <th class="text-end">Final</th>
+            <th class="text-end">Paid</th>
+            <th class="text-end">Balance</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in assignments %}
+          <tr>
+            <td>{{ a.student.roll_no }}</td>
+            <td>{{ a.student.name }}</td>
+            <td>{{ a.fee_structure.class_name }}</td>
+            <td>{{ a.student.section }}</td>
+            <td>{{ a.fee_structure.fee_category.name }}</td>
+
+            <td class="text-end">₹{{ a.original_amount|floatformat:2 }}</td>
+            <td class="text-end">₹{{ a.discount_amount|floatformat:2 }}</td>
+            <td class="text-end">₹{{ a.final_amount|floatformat:2 }}</td>
+            <td class="text-end">₹{{ a.paid_amount|floatformat:2 }}</td>
+            <td class="text-end">₹{{ a.balance_amount|floatformat:2 }}</td>
+
+            <td>
+              {% if a.is_fully_paid %}
+              <span class="status-badge status-paid">Paid</span>
+              {% else %}
+              <span class="status-badge status-pending">Pending</span>
+              {% endif %}
+            </td>
+
+            <td class="actions-cell">
+              <a href="{% url 'fees:fee_card_detail' a.student.id %}" class="btn btn-sm btn-primary" title="View Fee Card">
+
+                <i class="fas fa-id-card" style="font-size:14px; color:#ffffff;"></i>
+                <span>View</span>
+              </a>
+
+              <a href="{% url 'fees:edit_student_fee_assignment' a.pk %}" class="btn btn-sm btn-primary" title="Edit">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form method="post" action="{% url 'fees:delete_student_fee_assignment' a.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-danger"
+                  onclick="return confirm('Delete this fee assignment permanently?');" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="12" class="empty-table">
+              <i class="fas fa-money-bill-wave"></i>
+              <p>No fee assignments found</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Add some interactive elements
+    const rows = document.querySelectorAll('tbody tr');
+
+    rows.forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Ignore if clicking on actions or links
+        if (!e.target.closest('.actions-cell') && !e.target.closest('a') && !e.target.closest('button')) {
+          row.style.backgroundColor = '#f1f5f9';
+          setTimeout(() => {
+            row.style.backgroundColor = '';
+          }, 300);
+        }
+      });
+    });
+
+    // Add horizontal scroll indicator
+    const tableContainer = document.querySelector('.table-container');
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+
+    if (tableContainer.scrollWidth > tableContainer.clientWidth) {
+      scrollIndicator.style.display = 'inline-block';
+    }
+
+    // Hide scroll indicator after scrolling
+    tableContainer.addEventListener('scroll', function () {
+      scrollIndicator.style.opacity = '0.5';
+
+      clearTimeout(window.scrollTimeout);
+      window.scrollTimeout = setTimeout(function () {
+        scrollIndicator.style.opacity = '1';
+      }, 1500);
+    });
+
+    // Add animation to table rows
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach((row, index) => {
+      row.style.opacity = '0';
+      row.style.transform = 'translateY(20px)';
+
+      setTimeout(() => {
+        row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        row.style.opacity = '1';
+        row.style.transform = 'translateY(0)';
+      }, index * 100);
+    });
+  });
+</script>
+{% endblock %}

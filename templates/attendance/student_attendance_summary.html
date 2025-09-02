@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Monthly Class Attendance Summary{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center text-primary mb-4">📅 Monthly Class Attendance Summary</h2>
+
+  <!-- 🔎 Filter Form -->
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+      <label for="month" class="form-label">Select Month</label>
+      <input type="month" id="month" name="month" class="form-control" value="{{ selected_month }}" required>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">🔍 View Summary</button>
+    </div>
+    {% if summary %}
+    <div class="col-md-6 text-end">
+      <a href="{% url 'export_attendance_summary_pdf' %}?month={{ selected_month }}" class="btn btn-outline-success">
+        📤 Export Summary as PDF
+      </a>
+    </div>
+    {% endif %}
+  </form>
+
+  <!-- 📊 Summary Table -->
+  {% if summary %}
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+      <thead class="table-info">
+        <tr>
+          <th>Class</th>
+          <th>Section</th>
+          <th>Total Students</th>
+          <th>Present Days</th>
+          <th>Absent Days</th>
+          <th>Leave Days</th>
+          <th>Effective Days</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in summary %}
+        <tr>
+          <td>{{ row.class_name }}</td>
+          <td>{{ row.section }}</td>
+          <td>{{ row.total_students }}</td>
+          <td><span class="badge bg-success">{{ row.total_present }}</span></td>
+          <td><span class="badge bg-danger">{{ row.total_absent }}</span></td>
+          <td><span class="badge bg-warning text-dark">{{ row.total_leave|default:0 }}</span></td>
+          <td><strong>{{ row.effective_days|default:row.total_present|add:row.total_leave }}</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif selected_month %}
+  <div class="alert alert-warning text-center mt-4">
+    🚫 No data found for the selected month.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

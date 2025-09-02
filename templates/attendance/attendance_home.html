@@ -1,0 +1,21 @@
+{# templates/attendance/attendance_home.html #}
+{% extends 'base.html' %}
+
+{% block title %}Attendance Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">Attendance Dashboard</h1>
+  <div class="row">
+    <!-- Student Dashboard Card -->
+    <div class="col-md-6">
+      {% include 'attendance/student_attendance_home.html' %}
+    </div>
+
+    <!-- Staff Dashboard Card -->
+    <div class="col-md-6">
+      {% include 'attendance/staff_attendance_home.html' %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+<!-- library_dashboard.html -->
+ {% extends 'base.html' %}
+
+{% block title %}Library Dashboard{% endblock %}
+
+{% block content %}
+<h2>Library Dashboard</h2>
+<ul>
+  <li><a href="{% url 'book_list' %}">View Books</a></li>
+  <li><a href="{% url 'issue_list' %}">View Issued Books</a></li>
+</ul>
+{% endblock %}

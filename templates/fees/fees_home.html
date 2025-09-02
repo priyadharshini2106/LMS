@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fee Management{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+<style>
+  :root {
+    --primary: #4361ee;
+    --secondary: #3f37c9;
+    --success: #4cc9f0;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gradient-start: #4361ee;
+    --gradient-end: #3a0ca3;
+    --card-hover: #4895ef;
+  }
+  
+  body { 
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+  }
+  
+  .main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .page-header {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+  }
+  
+  .page-title {
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    position: relative;
+    display: inline-block;
+  }
+  
+  .page-title:after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    border-radius: 2px;
+  }
+  
+  .page-subtitle {
+    color: #6c757d;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 20px auto 0;
+    line-height: 1.5;
+  }
+  
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-bottom: 50px;
+  }
+  
+  .tool-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05), 0 6px 6px rgba(0, 0, 0, 0.1);
+    padding: 25px 20px;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border: none;
+  }
+  
+  .tool-card:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  
+  .tool-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.08);
+  }
+  
+  .tool-card:hover:before {
+    transform: scaleX(1);
+  }
+  
+  .tool-card .icon {
+    font-size: 42px;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: transform 0.3s ease;
+  }
+  
+  .tool-card:hover .icon {
+    transform: scale(1.1);
+  }
+  
+  .tool-card .label {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark);
+    text-align: center;
+    transition: color 0.3s ease;
+  }
+  
+  .tool-card:hover .label {
+    color: var(--primary);
+  }
+  
+  .upcoming-features {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    padding: 30px;
+    margin-top: 30px;
+  }
+  
+  .upcoming-title {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .upcoming-title:before {
+    content: '🔮';
+    margin-right: 10px;
+    font-size: 1.3rem;
+  }
+  
+  .feature-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .feature-item {
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+  }
+  
+  .feature-item:hover {
+    background-color: #e9ecef;
+    transform: translateX(5px);
+  }
+  
+  .feature-item:before {
+    content: '✨';
+    margin-right: 15px;
+    font-size: 1.2rem;
+  }
+  
+  @media (max-width: 768px) {
+    .tool-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .page-title {
+      font-size: 2rem;
+    }
+    
+    .tool-card {
+      height: 140px;
+    }
+  }
+</style>
+
+<div class="main-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">💰 Fee Management Panel</h1>
+    <p class="page-subtitle">Efficiently manage all fee-related operations in one place. Track categories, structures, assignments, and payments seamlessly.</p>
+  </div>
+
+  <!-- Card Grid -->
+  <div class="tool-grid">
+    <a href="{% url 'fees:fee_category_list' %}">
+      <div class="tool-card">
+        <div class="icon">🏷</div>
+        <div class="label">Manage Fee Categories</div>
+      </div>
+    </a>
+
+    <a href="{% url 'fees:fee_structure_list' %}">
+      <div class="tool-card">
+        <div class="icon">🗂</div>
+        <div class="label">Manage Fee Structures</div>
+      </div>
+    </a>
+
+    <a href="{% url 'fees:student_fee_assignment_list' %}">
+      <div class="tool-card">
+        <div class="icon">👩‍🎓</div>
+        <div class="label">Assign Fees to Students</div>
+      </div>
+    </a>
+
+    <!-- Uncomment when ready -->
+    <!--
+    <a href="{% url 'fees:fee_payment_list' %}">
+      <div class="tool-card">
+        <div class="icon">💳</div>
+        <div class="label">Record / View Payments</div>
+      </div>
+    </a>
+    -->
+  </div>
+
+  <!-- Upcoming Features Section -->
+  <div class="upcoming-features">
+    <h3 class="upcoming-title">Upcoming Features</h3>
+    <ul class="feature-list">
+      <li class="feature-item">SMS/Email Reminders</li>
+      <li class="feature-item">Advanced Reports & Exports</li>
+      <li class="feature-item">Scholarship & Concession Module</li>
+      <li class="feature-item">Defaulter Alerts</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+<!-- templates/attendance/student_attendance_month_summary.html -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-4 text-center text-primary">📅 Student Attendance – Monthly Detail</h3>
+
+    <form method="get" class="row g-3 align-items-end mb-4">
+        <div class="col-md-6">
+            <label for="student" class="form-label">Select Student:</label>
+            <select name="student" id="student" class="form-select" required>
+                <option value="">-- Select Student --</option>
+                {% for s in students %}
+                    <option value="{{ s.id }}" {% if selected_student_id|default:'' == s.id|stringformat:"s" %}selected{% endif %}>
+                        {{ s.name }} ({{ s.roll_no }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="month" class="form-label">Month:</label>
+            <input type="month" id="month" name="month" class="form-control" value="{{ selected_month }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-success w-100">🔍 View</button>
+        </div>
+    </form>
+
+    {% if records %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-info">
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in records %}
+                        <tr>
+                            <td>{{ rec.date }}</td>
+                            <td>{{ rec.status }}</td>
+                            <td>{{ rec.remarks|default:'—' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% elif selected_student_id and selected_month %}
+        <div class="alert alert-warning">No records found for the selected student and month.</div>
+    {% endif %}
+</div>
+{% endblock %}

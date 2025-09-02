@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Visitors{% endblock %}
+
+{% block content %}
+<style>
+  html, body { height:100%; }
+  body { background: transparent !important; }
+  body::before{
+    content:""; position: fixed; inset: 0;
+    background: url("{% static 'images/bg-wave.png' %}") center/cover no-repeat fixed;
+    z-index: -1;
+  }
+  .edge-to-edge{ width:100vw; position:relative; left:50%; right:50%; margin-left:-50vw; margin-right:-50vw; }
+  .page-wrap{
+    width:100%;
+    background: rgba(255,255,255,.70);
+    border:1px solid rgba(233,213,255,.55);
+    border-radius:12px;
+    padding:18px 22px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow:0 8px 24px rgba(0,0,0,.08);
+  }
+  .page-title{ font-weight:800; font-size:1.9rem; display:flex; align-items:center; gap:.6rem; margin-bottom:.6rem; }
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem; }
+
+  .btnx{ display:inline-block; padding:.44rem .9rem; border-radius:999px; font-weight:700; text-decoration:none!important; transition:.18s; border:1px solid transparent; }
+  .btnx:focus{ outline:none; box-shadow:0 0 0 .18rem rgba(124,58,237,.18); }
+  .btn-primaryx{ background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:0; box-shadow:0 10px 22px rgba(124,58,237,.25); }
+  .btn-primaryx:hover{ background:#5b21b6; color:#fff; transform:translateY(-1px); }
+  .btn-outlinex{ background:#fff; border:1px solid rgba(233,213,255,.75); color:#3b3b3b; }
+  .btn-outlinex:hover{ background:#6d28d9; color:#fff; border-color:#6d28d9; }
+
+  .btn-editx{ background:#fff; border:1px solid #fbbf24; color:#b45309; padding:.28rem .7rem; font-size:.92rem; }
+  .btn-editx:hover{ background:#b45309; color:#fff; border-color:#b45309; }
+  .btn-delex{ background:#fff; border:1px solid #fca5a5; color:#b91c1c; padding:.28rem .7rem; font-size:.92rem; cursor:pointer; }
+  .btn-delex:hover{ background:#b91c1c; color:#fff; border-color:#b91c1c; }
+
+  .search-input{
+    border:1px solid rgba(233,213,255,.75);
+    border-radius:999px;
+    padding:.5rem 1rem;
+    min-width:320px;
+    background:rgba(255,255,255,.9);
+  }
+  .search-input:focus{
+    border-color:#8b5cf6;
+    box-shadow:0 0 0 .18rem rgba(139,92,246,.18);
+    outline:none;
+  }
+
+  .table-wrap{ width:100%; border:1px solid rgba(233,213,255,.55); border-radius:12px; overflow:hidden; background:transparent; }
+  table{ width:100%; border-collapse:collapse; background:transparent; }
+  thead th{ background:rgba(233,213,255,.85); color:#3b197b; text-align:left; padding:.85rem .9rem; font-weight:800; font-size:1.02rem; }
+  tbody tr{ background:transparent!important; border-bottom:1px solid rgba(233,213,255,.55); }
+  tbody tr:last-child{ border-bottom:none; }
+  td{ padding:.9rem .9rem; font-size:1.03rem; color:#0f0f13; vertical-align:middle; }
+  tbody tr:hover{ background:rgba(255,255,255,.24); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+
+  .badgex{ display:inline-block; padding:.28rem .55rem; border-radius:999px; font-weight:700; font-size:.82rem; }
+  .badge-date{ background:rgba(224,236,255,.85); color:#1d4ed8; }
+  .badge-purpose{ background:rgba(233,255,236,.85); color:#15803d; }
+  .badge-meta{ background:rgba(238,242,255,.85); color:#3730a3; }
+
+  .text-right{ text-align:right; }
+</style>
+
+<div class="edge-to-edge">
+  <div class="page-wrap">
+    <h2 class="page-title">🚶 Visitors</h2>
+
+    <div class="toolbar">
+      <div><a href="{% url 'hostel:visitor_create' %}" class="btnx btn-primaryx">➕ Add Visitor</a></div>
+      <form method="get" style="display:flex; gap:.6rem; align-items:center;">
+        <input class="search-input" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by hostel, student, name, purpose…">
+        <button class="btnx btn-outlinex" type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Hostel</th>
+            <th>Student</th>
+            <th>Visitor</th>
+            <th>Relationship</th>
+            <th>Visit</th>
+            <th>Purpose</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in visitors %}
+          <tr>
+            <td>{{ v.hostel }}</td>
+
+            <!-- Student: show FK if present; else use denormalized fields -->
+            <td>
+              {% if v.student %}
+                {{ v.student.name|default:v.student }}
+                {% if v.student.class_section or v.student.admission_number %}
+                  <span class="badgex badge-meta">
+                    {{ v.student.class_section.class_name|default:"—" }}{{ v.student.class_section.section|default:"" }}
+                    · {{ v.student.admission_number|default:"—" }}
+                  </span>
+                {% endif %}
+              {% else %}
+                {% if v.student_name or v.admission_number or v.student_class %}
+                  <div>{{ v.student_name|default:"—" }}</div>
+                  <span class="badgex badge-meta">
+                    {{ v.student_class|default:"—" }} · {{ v.admission_number|default:"—" }}
+                  </span>
+                {% else %}
+                  — 
+                {% endif %}
+              {% endif %}
+            </td>
+
+            <td>{{ v.visitor_name|default:"—" }}</td>
+
+            <!-- Relationship if model has it; otherwise shows — -->
+            <td>
+              {% if v.relationship is not None %}
+                {{ v.relationship|default:"—" }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+
+            <td>
+              {% if v.visit_datetime %}
+                <span class="badgex badge-date">{{ v.visit_datetime|date:"Y-m-d H:i" }}</span>
+              {% else %}
+                <span class="badgex badge-date">{{ v.visit_date|date:"Y-m-d" }}</span>
+                {% if v.out_time %}
+                  <span class="badgex badge-meta">out {{ v.out_time|time:"H:i" }}</span>
+                {% endif %}
+              {% endif %}
+            </td>
+
+            <td>
+              {% if v.purpose %}
+                <span class="badgex badge-purpose">{{ v.purpose|truncatechars:40 }}</span>
+              {% else %}—{% endif %}
+            </td>
+
+            <td class="text-right">
+              <a href="{% url 'hostel:visitor_update' v.pk %}" class="btnx btn-editx">✏️ Edit</a>
+              <form action="{% url 'hostel:visitor_delete' v.pk %}" method="post" style="display:inline" onsubmit="return confirm('Delete this visitor entry?');">
+                {% csrf_token %}
+                <button type="submit" class="btnx btn-delex">🗑️ Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" style="text-align:center; padding:2rem 0;">No visitors found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align:right; margin-top:.6rem; font-weight:600;">
+      Showing {{ visitors|length }} item{{ visitors|length|pluralize }}
+    </div>
+  </div>
+</div>
+{% endblock %}

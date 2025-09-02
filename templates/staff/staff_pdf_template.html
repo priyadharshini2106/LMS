@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Staff PDF Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #888; padding: 6px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    h2 { text-align: center; }
+  </style>
+</head>
+<body>
+  <h2>Staff Report</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Staff ID</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Department</th>
+        <th>Designation</th>
+        <th>Contact</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in staff %}
+      <tr>
+        <td>{{ s.staff_id }}</td>
+        <td>{{ s.full_name }}</td>
+        <td>{{ s.get_staff_category_display }}</td>
+        <td>{{ s.get_department_display }}</td>
+        <td>{{ s.get_designation_display }}</td>
+        <td>{{ s.contact_number }}</td>
+        <td>{{ s.get_status_display }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

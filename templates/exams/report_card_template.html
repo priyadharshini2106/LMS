@@ -1,0 +1,49 @@
+<!-- report_card_template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Report Card</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+    .header { text-align: center; margin-top: 20px; }
+    .summary { margin-top: 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>Student Report Card</h2>
+    <p><strong>Student:</strong> {{ student.full_name }} | <strong>Term:</strong> {{ term.name }}</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Subject</th>
+        <th>Marks Obtained</th>
+        <th>Max Marks</th>
+        <th>Grade</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for mark in marks %}
+      <tr>
+        <td>{{ mark.subject.name }}</td>
+        <td>{{ mark.marks_obtained }}</td>
+        <td>{{ mark.max_marks }}</td>
+        <td>{{ mark.grade }}</td>
+        <td>{{ mark.remarks }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="summary">
+    <p><strong>Total:</strong> {{ total }} | <strong>Average:</strong> {{ average|floatformat:2 }}</p>
+    <p><strong>Result:</strong> {% if average >= 35 %}Pass{% else %}Fail{% endif %}</p>
+  </div>
+</body>
+</html>

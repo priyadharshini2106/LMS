@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Student Fee Cards{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --bd:#e5e7eb; --muted:#6b7280; --soft:#f8fafc; --ink:#0f172a;
+  }
+  @media print {
+    .no-print { display: none !important; }
+    .fee-card { page-break-inside: avoid; break-inside: avoid; }
+    .fee-card + .fee-card { page-break-before: always; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  /* Card (no shadow) */
+  .fee-card {
+    border: 1px solid var(--bd);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: none;              /* <-- removed shadow */
+    margin-bottom: 1.5rem;
+    background: #fff;
+    transition: transform .2s;
+  }
+  .fee-card:hover { transform: translateY(-3px); }
+
+  /* Simple grids for sections */
+  .student-info, .fee-form { display: grid; gap: .35rem; }
+
+  /* Label | : | Value row (colon centered) */
+  .pair{
+    display: grid;
+    grid-template-columns: 1fr 1ch 1fr;   /* label | ":" | value */
+    align-items: center;
+    padding: .35rem 0;
+    border-bottom: 1px dashed var(--bd);
+    column-gap: .5rem;
+  }
+  .pair:last-child{ border-bottom: none; }
+
+  .label{
+    color: var(--muted);
+    font-weight: 600;
+    justify-self: start;           /* left */
+  }
+  .sep{
+    text-align: center;            /* center the ":" */
+    color: var(--muted);
+  }
+  .value{
+    color: var(--ink);
+    justify-self: end;             /* right */
+    font-variant-numeric: tabular-nums; /* tidy number alignment */
+    text-align: right;
+  }
+
+  .fee-item { margin-top: 1rem; }
+  .fee-item-title {
+    font-weight: 600;
+    margin-bottom: .5rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  /* Bottom grand totals (no shadow) */
+  .grand-summary {
+    border: 1px solid var(--bd);
+    border-radius: 1rem;
+    background: #ffffff;
+    box-shadow: none;              /* <-- removed shadow */
+    padding: 1rem 1.25rem;
+  }
+  .grand-summary .line {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-right: 1rem;
+    margin-bottom: .25rem;
+  }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+  <h2 class="text-primary m-0">Student Fee Cards</h2>
+  <div class="d-flex gap-2">
+    <a href="{% url 'fees:student_fee_assignment_list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Assignments
+    </a>
+    <button onclick="window.print()" class="btn btn-outline-secondary">
+      <i class="bi bi-printer me-1"></i> Print / Save PDF
+    </button>
+  </div>
+</div>
+
+{% if cards %}
+  {% for card in cards %}
+    <!-- data-* used for bottom grand totals -->
+    <div class="fee-card"
+         data-total="{{ card.total_final|floatformat:2 }}"
+         data-paid="{{ card.total_paid|floatformat:2 }}"
+         data-balance="{{ card.balance|floatformat:2 }}">
+
+      <h4 class="text-dark mb-2">{{ card.student.name }}</h4>
+
+      <div class="student-info">
+        <div class="pair"><span class="label">Admission No</span><span class="sep">:</span><span class="value">{{ card.student.admission_number|default:"—" }}</span></div>
+        <div class="pair"><span class="label">Roll No</span><span class="sep">:</span><span class="value">{{ card.student.roll_no|default:"—" }}</span></div>
+        <div class="pair"><span class="label">Class</span><span class="sep">:</span><span class="value">{{ card.student.class_name|default:"—" }}</span></div>
+        <div class="pair"><span class="label">Section</span><span class="sep">:</span><span class="value">{{ card.student.section|default:"—" }}</span></div>
+        {% if card.items.0.fee_structure.academic_year %}
+          <div class="pair"><span class="label">Academic Year</span><span class="sep">:</span><span class="value">{{ card.items.0.fee_structure.academic_year }}</span></div>
+        {% endif %}
+      </div>
+
+      <!-- <div class="totals mt-3">
+        <span class="badge bg-light text-dark">Total: ₹{{ card.total_final|floatformat:2 }}</span>
+        <span class="badge bg-info text-dark ms-1">Paid: ₹{{ card.total_paid|floatformat:2 }}</span>
+        {% if card.balance|floatformat:2 == '0.00' %}
+          <span class="badge bg-success ms-1">Balance: ₹0.00 (PAID)</span>
+        {% else %}
+          <span class="badge bg-warning text-dark ms-1">Balance: ₹{{ card.balance|floatformat:2 }}</span>
+        {% endif %}
+      </div> -->
+
+      <hr>
+
+      <div class="fee-items">
+        {% for a in card.items %}
+          <div class="fee-item">
+            <div class="fee-item-title">
+              <span>{{ a.fee_structure.fee_category.name }}</span>
+              {% if a.is_fully_paid %}
+                <span class="badge bg-success ms-2">Paid</span>
+              {% else %}
+                <span class="badge bg-warning text-dark ms-2">Pending</span>
+              {% endif %}
+            </div>
+
+            <div class="fee-form">
+              <div class="pair"><span class="label">Due Date</span><span class="sep">:</span><span class="value">{{ a.fee_structure.due_date|default:"—" }}</span></div>
+              <div class="pair"><span class="label">Original</span><span class="sep">:</span><span class="value">₹{{ a.original_amount|floatformat:2 }}</span></div>
+              <div class="pair"><span class="label">Discount</span><span class="sep">:</span><span class="value">₹{{ a.discount_amount|floatformat:2 }}</span></div>
+              <div class="pair"><span class="label">Final</span><span class="sep">:</span><span class="value">₹{{ a.final_amount|floatformat:2 }}</span></div>
+              <div class="pair"><span class="label">Paid</span><span class="sep">:</span><span class="value">₹{{ a.paid_amount|floatformat:2 }}</span></div>
+              <div class="pair"><span class="label">Balance</span><span class="sep">:</span><span class="value">₹{{ a.balance_amount|floatformat:2 }}</span></div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+
+  <!-- Bottom of page: Grand Totals -->
+  <div class="grand-summary mb-4">
+    <div class="line"><span class="label">Total</span><span>:</span><strong id="grand-total">₹0.00</strong></div>
+    <div class="line"><span class="label">Paid</span><span>:</span><strong id="grand-paid">₹0.00</strong></div>
+    <div class="line"><span class="label">Balance</span><span>:</span><strong id="grand-balance">₹0.00</strong></div>
+  </div>
+
+{% else %}
+  <div class="alert alert-info">No fee cards found for the selected filters.</div>
+{% endif %}
+
+<script>
+  // Format as INR
+  const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Sum totals from each section's data-* attributes
+  (function sumGrandTotals(){
+    const cards = document.querySelectorAll('.fee-card[data-total]');
+    let t = 0, p = 0, b = 0;
+    cards.forEach(el => {
+      t += parseFloat(el.dataset.total || '0') || 0;
+      p += parseFloat(el.dataset.paid || '0') || 0;
+      b += parseFloat(el.dataset.balance || '0') || 0;
+    });
+    const gt = document.getElementById('grand-total');
+    const gp = document.getElementById('grand-paid');
+    const gb = document.getElementById('grand-balance');
+    if (gt && gp && gb) {
+      gt.textContent = inr.format(t);
+      gp.textContent = inr.format(p);
+      gb.textContent = inr.format(b);
+    }
+  })();
+</script>
+{% endblock %}

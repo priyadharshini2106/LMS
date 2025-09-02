@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Allocation List{% endblock %}
+
+{% block content %}
+<style>
+  /* ===== Background & wrapper (same as room_list / hostel_list) ===== */
+  html, body { height: 100%; }
+  body { background: transparent !important; }
+  body::before{
+    content:"";
+    position: fixed; inset: 0;
+    background: url("{% static 'images/bg-wave.png' %}") center/cover no-repeat fixed;
+    z-index: -1;
+  }
+  .edge-to-edge{ width:100vw; position:relative; left:50%; right:50%; margin-left:-50vw; margin-right:-50vw; }
+  .page-wrap{
+    width:100%;
+    background: rgba(255,255,255,.70);
+    border:1px solid rgba(233,213,255,.55);
+    border-radius:12px;
+    padding:18px 22px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow:0 8px 24px rgba(0,0,0,.08);
+  }
+  .page-title{ font-weight:800; font-size:1.9rem; display:flex; align-items:center; gap:.6rem; margin-bottom:.6rem; }
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem; }
+
+  /* ===== Buttons (shared) ===== */
+  .btnx{ display:inline-block; padding:.44rem .9rem; border-radius:999px; font-weight:700; text-decoration:none!important; transition:.18s; border:1px solid transparent; }
+  .btnx:focus{ outline:none; box-shadow:0 0 0 .18rem rgba(124,58,237,.18); }
+  .btn-primaryx{ background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:0; box-shadow:0 10px 22px rgba(124,58,237,.25); }
+  .btn-primaryx:hover{ background:#5b21b6; color:#fff; transform:translateY(-1px); }
+  .btn-outlinex{ background:#fff; border:1px solid rgba(233,213,255,.75); color:#3b3b3b; }
+  .btn-outlinex:hover{ background:#6d28d9; color:#fff; border-color:#6d28d9; }
+  .btn-editx{ background:#fff; border:1px solid #fbbf24; color:#b45309; padding:.28rem .7rem; font-size:.92rem; }
+  .btn-editx:hover{ background:#b45309; color:#fff; border-color:#b45309; }
+  .btn-delex{ background:#fff; border:1px solid #fca5a5; color:#b91c1c; padding:.28rem .7rem; font-size:.92rem; cursor:pointer; }
+  .btn-delex:hover{ background:#b91c1c; color:#fff; border-color:#b91c1c; }
+
+  /* ===== Search input ===== */
+  input.search-input{
+    border:1px solid rgba(233,213,255,.75);
+    border-radius:999px;
+    padding:.5rem 1rem;
+    min-width:320px;
+    background:rgba(255,255,255,.9);
+    box-shadow:none; outline: none;
+  }
+  input.search-input:focus{
+    border-color:#8b5cf6;
+    box-shadow:0 0 0 .18rem rgba(139,92,246,.18);
+  }
+
+  /* ===== Table ===== */
+  .table-wrap{ width:100%; border:1px solid rgba(233,213,255,.55); border-radius:12px; overflow:hidden; background:transparent; }
+  table{ width:100%; border-collapse:collapse; background:transparent; }
+  thead th{ background:rgba(233,213,255,.85); color:#3b197b; text-align:left; padding:.85rem .9rem; font-weight:800; font-size:1.02rem; }
+  tbody tr{ background:transparent!important; border-bottom:1px solid rgba(233,213,255,.55); transition: background .2s; }
+  tbody tr:last-child{ border-bottom:none; }
+  td{ padding:.9rem .9rem; font-size:1.03rem; color:#0f0f13; vertical-align:middle; }
+  tbody tr:hover{ background:rgba(255,255,255,.24); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+
+  .badgex{ display:inline-block; padding:.28rem .55rem; border-radius:999px; font-weight:700; font-size:.82rem; }
+  .badge-active{ background:rgba(233,255,236,.85); color:#15803d; }
+  .badge-pending{ background:rgba(255,247,210,.95); color:#854d0e; }
+  .badge-vacated{ background:rgba(255,228,230,.85); color:#b91c1c; }
+
+  .text-right{ text-align:right; }
+
+  /* ===== Confirmation Modal ===== */
+  .confirm-modal {
+    position: fixed; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.6); z-index: 2000;
+  }
+  .confirm-modal.active { display: flex; }
+  .confirm-box {
+    background: white; padding: 20px; border-radius: 12px; max-width: 320px; text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+  .confirm-box h4 { margin-bottom: 1rem; font-weight: 700; }
+  .confirm-actions { display: flex; gap: .5rem; justify-content: center; }
+  .confirm-btn { padding: .4rem .9rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
+  .confirm-yes { background: #b91c1c; color: white; }
+  .confirm-no { background: #e5e7eb; }
+
+  /* ===== Undo Toast ===== */
+  .undo-toast {
+    position: fixed; top: 20px; right: 20px;
+    background: #8987ff; color: white; padding: .6rem 1rem;
+    border-radius: 8px; font-weight: 600; display: none; z-index: 3000;
+  }
+  .undo-toast button {
+    background: rgba(255,255,255,0.2); color: white; border: none;
+    margin-left: 10px; padding: .2rem .6rem; border-radius: 4px; cursor: pointer;
+  }
+</style>
+
+<div class="edge-to-edge">
+  <div class="page-wrap">
+    <h2 class="page-title">📋 Allocation List</h2>
+
+    <div class="toolbar">
+      <div><a href="{% url 'hostel:allocation_create' %}" class="btnx btn-primaryx">➕ New Allocation</a></div>
+      <form method="get" style="display:flex; gap:.6rem; align-items:center;">
+        <input class="search-input" type="text" name="q" value="{{ request.GET.q }}"
+               placeholder="Search by student, hostel, room, bed, status…">
+        <button class="btnx btn-outlinex" type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Hostel</th>
+            <th>Room</th>
+            <th>Bed</th>
+            <th>Status</th>
+            <th>Allocated</th>
+            <th>Vacated</th>
+            <th class="text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for alloc in allocations %}
+          <tr data-id="{{ alloc.pk }}">
+            <td>{{ alloc.student }}</td>
+            <td>{{ alloc.bed.room.hostel.name }}</td>
+            <td>{{ alloc.bed.room.room_number }}</td>
+            <td>{{ alloc.bed.bed_number }}</td>
+            <td>
+              {% with s=alloc.get_status_display|lower %}
+                {% if "active" in s %}
+                  <span class="badgex badge-active">Active</span>
+                {% elif "pending" in s or "requested" in s %}
+                  <span class="badgex badge-pending">{{ alloc.get_status_display }}</span>
+                {% elif "vacat" in s or "closed" in s %}
+                  <span class="badgex badge-vacated">{{ alloc.get_status_display }}</span>
+                {% else %}
+                  <span class="badgex badge-pending">{{ alloc.get_status_display }}</span>
+                {% endif %}
+              {% endwith %}
+            </td>
+            <td>{{ alloc.date_allocated }}</td>
+            <td>{{ alloc.date_vacated|default:"–" }}</td>
+            <td class="text-right">
+              <a href="{% url 'hostel:allocation_update' alloc.pk %}" class="btnx btn-editx">✏️ Edit</a>
+              <form action="{% url 'hostel:allocation_delete' alloc.pk %}" method="post" class="delete-form" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btnx btn-delex">🗑️ Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" style="text-align:center; padding:2rem 0;">No allocations found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align:right; margin-top:.6rem; font-weight:600;">
+      Showing {{ allocations|length }} item{{ allocations|length|pluralize }}
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-box">
+    <h4>Are you sure you want to delete?</h4>
+    <div class="confirm-actions">
+      <button class="confirm-btn confirm-yes">Yes</button>
+      <button class="confirm-btn confirm-no">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- Undo Toast -->
+<div class="undo-toast" id="undoToast">
+  Allocation deleted.
+  <button id="undoBtn">Undo</button>
+</div>
+
+<script>
+(function(){
+  // Confirmation & Undo (same flow as room_list)
+  let targetForm = null;
+  const confirmModal = document.getElementById('confirmModal');
+  const undoToast = document.getElementById('undoToast');
+  const undoBtn = document.getElementById('undoBtn');
+
+  document.querySelectorAll('.delete-form').forEach(form=>{
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      targetForm = form;
+      confirmModal.classList.add('active');
+    });
+  });
+
+  confirmModal.querySelector('.confirm-yes').addEventListener('click', ()=>{
+    confirmModal.classList.remove('active');
+    undoToast.style.display = 'block';
+    setTimeout(()=>{
+      undoToast.style.display = 'none';
+      if (targetForm) targetForm.submit();
+    }, 5000); // 5s undo grace
+  });
+  confirmModal.querySelector('.confirm-no').addEventListener('click', ()=>{
+    confirmModal.classList.remove('active');
+    targetForm = null;
+  });
+  undoBtn.addEventListener('click', ()=>{
+    undoToast.style.display = 'none';
+    targetForm = null; // cancel deletion
+  });
+
+  // ESC closes modal
+  document.addEventListener('keydown', e=>{
+    if (e.key === 'Escape' && confirmModal.classList.contains('active')) {
+      confirmModal.classList.remove('active');
+      targetForm = null;
+    }
+  });
+})();
+</script>
+{% endblock %}

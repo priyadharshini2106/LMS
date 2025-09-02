@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{% if view.object %}Edit Visitor{% else %}Add Visitor{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+  html, body { height: 100%; }
+  body { background: transparent !important; }
+  body::before{
+    content:""; position: fixed; inset: 0;
+    background: url("{% static 'images/bg-wave.png' %}") center/cover no-repeat fixed;
+    z-index: -1;
+  }
+
+  :root{ --lav-strong:#7c3aed; --lav-soft:#a78bfa; --ink:#14121a; --muted:#3f3f46; }
+
+  .form-shell{ max-width: 1000px; margin: 22px auto 32px; padding: 0 18px; }
+  .page-title{ font-weight: 800; font-size: 2rem; color: var(--ink); margin-bottom: 14px; }
+
+  .form-pane{
+    background: rgba(255,255,255,.70);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(233,213,255,.55);
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(124,58,237,.12);
+    padding: 22px;
+  }
+
+  .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 18px 22px; }
+  @media (max-width: 840px){ .grid-2{ grid-template-columns: 1fr; } }
+
+  .field label{ display:block; font-weight:800; color:var(--muted); margin: 2px 0 6px 2px; }
+
+  .field input[type="text"],
+  .field input[type="date"],
+  .field input[type="time"],
+  .field select,
+  .field textarea{
+    width:100%; background: transparent; border:none;
+    border-bottom: 2px solid rgba(0,0,0,.18);
+    padding: 10px 6px 8px 2px; font-size: 1.06rem; color: var(--ink);
+    outline: none; transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    border-radius: 8px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-bottom-color: var(--lav-strong);
+    background: rgba(255,255,255,.25);
+    box-shadow: 0 8px 24px rgba(124,58,237,.10);
+  }
+
+  textarea#id_purpose{ min-height: 44px; resize: vertical; }
+  .errorlist{ list-style:none; margin:.35rem 0 0; padding:0; color:#b91c1c; font-weight:700; font-size:.92rem; }
+
+  /* typeahead */
+  .ta-wrap{ position:relative; }
+  .ta-list{
+    position:absolute; left:0; right:0; top:100%; z-index:30;
+    background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px;
+    box-shadow:0 10px 28px rgba(0,0,0,.12); margin-top:6px; overflow:hidden; display:none;
+    max-height: 240px; overflow-y: auto;
+  }
+  .ta-item{ padding:.55rem .75rem; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  .ta-item b{ font-weight:800; color:#111827; }
+  .ta-sub{ font-size:.85rem; color:#6b7280; }
+  .ta-badges{ display:flex; gap:.35rem; }
+  .ta-badge{ font-size:.75rem; padding:.1rem .45rem; border-radius:999px; background:#f3f4f6; color:#374151; font-weight:700; }
+  .ta-item:hover, .ta-item.active{ background:#f9fafb; }
+
+  .muted{ color:#6b7280; font-weight:700; font-size:.85rem; margin-top:6px; }
+
+  .actions{ margin-top: 22px; display:flex; gap: 12px; justify-content:center; flex-wrap:wrap; }
+  .btnx{ display:inline-block; padding:.9rem 1.6rem; border-radius:14px; font-weight:800; text-decoration:none !important; border:1px solid transparent; transition: all .18s ease; cursor:pointer; }
+  .btn-primaryx{ background: linear-gradient(135deg,var(--lav-soft),var(--lav-strong)); color:#fff; box-shadow: 0 10px 22px rgba(124,58,237,.22); }
+  .btn-primaryx:hover{ background:#5b21b6; color:#fff; transform: translateY(-1px); }
+  .btn-cancelx{ background:#fff; color:#6b7280; border:1px solid rgba(0,0,0,.12); }
+  .btn-cancelx:hover{ background:#fee2e2; color:#991b1b; border-color:#fecaca; text-decoration:none !important; }
+</style>
+
+<div class="form-shell">
+  <h2 class="page-title">
+    {% if view.object %}✏️ Edit Visitor{% else %}🚶 Add Visitor{% endif %}
+  </h2>
+
+  <form method="post" class="form-pane" novalidate>
+    {% csrf_token %}
+
+    <div class="grid-2">
+      <!-- Hostel -->
+      <div class="field">
+        <label for="{{ form.hostel.id_for_label|default:'id_hostel' }}">Hostel</label>
+        {{ form.hostel }}
+        {% if form.hostel.errors %}<ul class="errorlist">{{ form.hostel.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Admission No (typeahead) -->
+      <div class="field">
+        <label for="{{ form.admission_number.id_for_label|default:'id_admission_number' }}">Admission No</label>
+        <div class="ta-wrap">
+          {{ form.admission_number }}
+          <div id="admission_list" class="ta-list" role="listbox" aria-label="Student by admission"></div>
+        </div>
+        <div class="muted">Start typing; pick a match to auto-fill Name &amp; Class. Or type full admission and press Enter/Tab.</div>
+        {% if form.admission_number.errors %}<ul class="errorlist">{{ form.admission_number.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Student Name (readonly; still POSTed) -->
+      <div class="field">
+        <label for="{{ form.student_name.id_for_label|default:'id_student_name' }}">Student Name</label>
+        {{ form.student_name }}
+        {% if form.student_name.errors %}<ul class="errorlist">{{ form.student_name.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Student Class (readonly; still POSTed) -->
+      <div class="field">
+        <label for="{{ form.student_class.id_for_label|default:'id_student_class' }}">Student Class</label>
+        {{ form.student_class }}
+        {% if form.student_class.errors %}<ul class="errorlist">{{ form.student_class.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Visitor Name -->
+      <div class="field">
+        <label for="{{ form.visitor_name.id_for_label|default:'id_visitor_name' }}">Visitor Name</label>
+        {{ form.visitor_name }}
+        {% if form.visitor_name.errors %}<ul class="errorlist">{{ form.visitor_name.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Relationship -->
+      <div class="field">
+        <label for="{{ form.relationship.id_for_label|default:'id_relationship' }}">Relationship</label>
+        {{ form.relationship }}
+        {% if form.relationship.errors %}<ul class="errorlist">{{ form.relationship.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Purpose -->
+      <div class="field">
+        <label for="{{ form.purpose.id_for_label|default:'id_purpose' }}">Purpose</label>
+        {{ form.purpose }}
+        {% if form.purpose.errors %}<ul class="errorlist">{{ form.purpose.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Visit Date -->
+      <div class="field">
+        <label for="{{ form.visit_date.id_for_label|default:'id_visit_date' }}">Visit Date</label>
+        {{ form.visit_date }}
+        {% if form.visit_date.errors %}<ul class="errorlist">{{ form.visit_date.errors }}</ul>{% endif %}
+      </div>
+
+      <!-- Out Time (HH:MM) -->
+      <div class="field">
+        <label for="{{ form.out_time.id_for_label|default:'id_out_time' }}">Out Time</label>
+        {{ form.out_time }}
+        {% if form.out_time.errors %}<ul class="errorlist">{{ form.out_time.errors }}</ul>{% endif %}
+      </div>
+    </div>
+
+    <div class="muted" style="margin-top:8px;">“In Time” is recorded automatically when you save.</div>
+
+    <div class="actions">
+      <button type="submit" class="btnx btn-primaryx">Save Visitor</button>
+      <a href="{% url 'hostel:visitor_list' %}" class="btnx btn-cancelx">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+(function(){
+  // Endpoint from hostel/urls.py -> views.student_search
+  const SEARCH_URL = "{% url 'hostel:student_search' %}";
+
+  const admInput   = document.getElementById("id_admission_number");
+  const nameInput  = document.getElementById("id_student_name");
+  const classInput = document.getElementById("id_student_class");
+  const list       = document.getElementById("admission_list");
+
+  if (!admInput) return;
+
+  if (nameInput)  nameInput.readOnly  = true;
+  if (classInput) classInput.readOnly = true;
+
+  let items = [];
+  let activeIndex = -1;
+  let typingTimer = null;
+
+  function clearList(){
+    list.innerHTML = "";
+    list.style.display = "none";
+    items = [];
+    activeIndex = -1;
+  }
+
+  function render(results){
+    items = results || [];
+    if(!items.length){ clearList(); return; }
+    list.innerHTML = items.map((s,i)=>`
+      <div class="ta-item" role="option" data-index="${i}">
+        <div>
+          <b>${s.admission || ""}</b>
+          <div class="ta-sub">${s.name || "—"} · ${s.class || "—"}</div>
+        </div>
+        <div class="ta-badges">
+          <span class="ta-badge">${s.class || "—"}</span>
+          <span class="ta-badge">${s.name || "—"}</span>
+        </div>
+      </div>
+    `).join("");
+    list.style.display = "block";
+  }
+
+  function choose(index){
+    const s = items[index];
+    if(!s) return;
+    admInput.value = s.admission || "";
+    if (nameInput)  nameInput.value  = s.name  || "";
+    if (classInput) classInput.value = s.class || "";
+    clearList();
+    if (!s.class) fetchAdmissionDetails(admInput.value);
+  }
+
+  async function fetchAdmissionDetails(adm){
+    const val = (adm || "").trim();
+    if (!val) return;
+    try{
+      const r = await fetch(SEARCH_URL + "?admission_no=" + encodeURIComponent(val), {
+        headers: {"X-Requested-With":"XMLHttpRequest"}
+      });
+      if (!r.ok) return;
+      const s = await r.json(); // {id, name, admission_number, class_name, section}
+      const cls = ((s.class_name || "") + (s.section ? " - " + s.section : "")).trim().replace(/^ - | - $/g,"");
+      if (admInput.value.trim().toLowerCase() === (s.admission_number || "").toLowerCase()) {
+        if (nameInput)  nameInput.value  = s.name || "";
+        if (classInput) classInput.value = cls     || "";
+      }
+    }catch(e){ /* ignore */ }
+  }
+
+  admInput.addEventListener("input", function(){
+    const q = this.value.trim();
+    if (nameInput)  nameInput.value  = "";
+    if (classInput) classInput.value = "";
+    if(typingTimer) clearTimeout(typingTimer);
+    if(!q){ clearList(); return; }
+
+    typingTimer = setTimeout(async ()=>{
+      try{
+        const r = await fetch(SEARCH_URL + "?q=" + encodeURIComponent(q), {
+          headers: {"X-Requested-With":"XMLHttpRequest"}
+        });
+        const data = await r.json(); // [{id, admission, name, class}, ...]
+        render(data);
+      }catch(err){ clearList(); }
+    }, 220);
+  });
+
+  list.addEventListener("click", (e)=>{
+    const item = e.target.closest(".ta-item");
+    if(!item) return;
+    choose(parseInt(item.dataset.index, 10));
+  });
+
+  admInput.addEventListener("keydown", (e)=>{
+    if(list.style.display === "block"){
+      const max = items.length - 1;
+      if(e.key === "ArrowDown"){ e.preventDefault(); activeIndex = Math.min(max, activeIndex + 1); }
+      else if(e.key === "ArrowUp"){ e.preventDefault(); activeIndex = Math.max(0, activeIndex - 1); }
+      else if(e.key === "Enter"){
+        e.preventDefault();
+        if(activeIndex >= 0){ choose(activeIndex); return; }
+        fetchAdmissionDetails(admInput.value); return;
+      } else if(e.key === "Escape"){ clearList(); return; }
+      [...list.children].forEach((el,i)=> el.classList.toggle("active", i===activeIndex));
+    } else if (e.key === "Enter"){
+      e.preventDefault();
+      fetchAdmissionDetails(admInput.value);
+    }
+  });
+
+  admInput.addEventListener("blur", ()=>{
+    setTimeout(clearList, 120);
+    if ((!nameInput || !nameInput.value) && admInput.value.trim()){
+      fetchAdmissionDetails(admInput.value);
+    }
+  });
+
+  document.addEventListener("click", (e)=>{
+    if(!list.contains(e.target) && e.target !== admInput){ clearList(); }
+  });
+})();
+</script>
+
+<!-- Voice Input Script -->
+<script>
+(function(){
+  const textFields = Array.from(document.querySelectorAll('input[type="text"], textarea'));
+  if(!textFields.length) return;
+
+  let recognition;
+  if('webkitSpeechRecognition' in window){
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN';
+
+    recognition.onresult = function(event){
+      const transcript = event.results[event.results.length-1][0].transcript;
+      const activeEl = document.activeElement;
+      if(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName==='TEXTAREA')){
+        activeEl.value = transcript;
+      }
+    };
+
+    recognition.onerror = function(e){ console.log("Voice input error", e); };
+    recognition.onend = function(){ recognition.start(); }; // auto restart
+    recognition.start();
+
+    textFields.forEach(f=>{
+      f.addEventListener('focus', ()=>{
+        try{ recognition.start(); }catch(e){}
+      });
+    });
+  } else {
+    console.log("Voice input not supported in this browser");
+  }
+})();
+</script>
+{% endblock %}

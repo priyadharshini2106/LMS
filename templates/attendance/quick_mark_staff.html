@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="bg-white p-4 shadow rounded">
+
+    <h2 class="text-primary text-center mb-4">⚡ Quick Mark – Staff Attendance</h2>
+
+    <!-- Toggle Buttons -->
+    <div class="text-center mb-3">
+      <button type="button" class="btn btn-outline-primary me-2" onclick="toggleMode('radio')">Radio Mode</button>
+      <button type="button" class="btn btn-outline-secondary" onclick="toggleMode('dropdown')">Dropdown Mode</button>
+    </div>
+
+    <form method="post" id="attendanceForm">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label><strong>Date:</strong></label>
+        <input type="date" name="date" value="{{ today }}" class="form-control" required>
+      </div>
+
+      <!-- Quick Mark Buttons (only for radio mode) -->
+      <div class="mb-3" id="quickButtons">
+        <button type="button" class="btn btn-success me-2" onclick="markAll('Present')">Mark All Present</button>
+        <button type="button" class="btn btn-danger me-2" onclick="markAll('Absent')">Mark All Absent</button>
+        <button type="button" class="btn btn-warning" onclick="markAll('Leave')">Mark All Leave</button>
+      </div>
+
+      <!-- Radio Mode Table -->
+      <div id="radioMode">
+        <table class="table table-bordered">
+          <thead class="table-dark text-center">
+            <tr>
+              <th>Staff ID</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for staff in staffs %}
+            <tr>
+              <td>{{ staff.staff_id }}</td>
+              <td>{{ staff.full_name }}</td>
+              <td>
+                {% for code, label in status_choices %}
+                  <label class="me-2">
+                    <input type="radio" name="status_{{ staff.id }}" value="{{ code }}" {% if code == 'Present' %}checked{% endif %}> {{ label }}
+                  </label>
+                {% endfor %}
+              </td>
+              <td><input type="text" name="remarks_{{ staff.id }}" class="form-control" value="Nil"></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Dropdown Mode Table -->
+      <div id="dropdownMode" class="d-none">
+        <table class="table table-striped">
+          <thead class="table-dark text-center">
+            <tr>
+              <th>Staff Name</th>
+              <th>Status</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for staff in staffs %}
+            <tr>
+              <td>{{ staff.full_name }}</td>
+              <td>
+                <select name="status_{{ staff.id }}" class="form-select">
+                  {% for val, label in status_choices %}
+                    <option value="{{ val }}">{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td><input type="text" name="remarks_{{ staff.id }}" class="form-control" value="Nil"></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Submit -->
+      <div class="text-center mt-4">
+        <button type="submit" class="btn btn-primary me-2">Submit Attendance</button>
+        <a href="{% url 'staff_attendance_list' %}" class="btn btn-secondary">Back</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ✅ Staff IDs passed as JSON safely -->
+<script id="staffIDs" type="application/json">
+  {{ staff_ids_json|default:"[]"|safe }}
+</script>
+
+<script>
+  const staffIds = JSON.parse(document.getElementById('staffIDs').textContent);
+
+  function markAll(status) {
+    staffIds.forEach(id => {
+      const radios = document.getElementsByName(`status_${id}`);
+      radios.forEach(r => {
+        if (r.value === status) r.checked = true;
+      });
+    });
+  }
+
+  function toggleMode(mode) {
+    const radioMode = document.getElementById('radioMode');
+    const dropdownMode = document.getElementById('dropdownMode');
+    const quickButtons = document.getElementById('quickButtons');
+
+    if (mode === 'radio') {
+      radioMode.classList.remove('d-none');
+      dropdownMode.classList.add('d-none');
+      quickButtons.classList.remove('d-none');
+    } else {
+      dropdownMode.classList.remove('d-none');
+      radioMode.classList.add('d-none');
+      quickButtons.classList.add('d-none');
+    }
+  }
+</script>
+{% endblock %}

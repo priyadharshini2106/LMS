@@ -1,0 +1,16 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f7fa;
+}
+
+h2 {
+  color: #007bff;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+  margin: 6px;
+}

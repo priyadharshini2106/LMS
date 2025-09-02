@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Attendance Excel{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+<style>
+  :root {
+    --primary: #4361ee;
+    --secondary: #3a0ca3;
+    --success: #4cc9f0;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gradient-start: #4361ee;
+    --gradient-end: #3a0ca3;
+  }
+  
+  body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+  }
+  
+  .upload-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
+  
+  .page-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .page-title {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+  }
+  
+  .page-subtitle {
+    color: #6c757d;
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+  
+  .upload-card {
+    background: #f9fafc;
+    border-radius: 12px;
+    padding: 25px;
+    border: 2px dashed #dee2e6;
+    transition: all 0.3s ease;
+    margin-bottom: 25px;
+  }
+  
+  .upload-card:hover {
+    border-color: var(--primary);
+    background: #f0f7ff;
+  }
+  
+  .upload-icon {
+    text-align: center;
+    font-size: 3.5rem;
+    margin-bottom: 15px;
+    color: #adb5bd;
+  }
+  
+  .upload-card:hover .upload-icon {
+    color: var(--primary);
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 10px;
+    display: block;
+  }
+  
+  .file-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s ease;
+  }
+  
+  .file-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    outline: none;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(67, 97, 238, 0.2);
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
+  }
+  
+  .btn-secondary {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-secondary:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+  }
+  
+  .alert {
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  .alert-success {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  
+  .alert-error {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  
+  .alert-info {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  
+  .requirements {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 30px;
+  }
+  
+  .requirements-title {
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+  }
+  
+  .requirements-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .requirements-list li {
+    padding: 8px 0;
+    padding-left: 25px;
+    position: relative;
+  }
+  
+  .requirements-list li:before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--success);
+    font-weight: bold;
+  }
+  
+  @media (max-width: 768px) {
+    .upload-container {
+      margin: 20px;
+      padding: 20px;
+    }
+    
+    .page-title {
+      font-size: 1.8rem;
+    }
+  }
+</style>
+
+<div class="upload-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">📊 Upload Attendance from Excel</h1>
+    <p class="page-subtitle">Upload an Excel file to quickly import attendance records for your students</p>
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}" role="alert">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Upload Form -->
+  <div class="upload-card">
+    <div class="upload-icon">📤</div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label for="excel_file" class="form-label">Select Excel File (.xlsx)</label>
+        <input
+          class="form-control file-input"
+          type="file"
+          id="excel_file"
+          name="excel_file"
+          accept=".xlsx, .xls"
+          required
+        >
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button type="submit" class="btn btn-primary">Upload File</button>
+        <a href="{% url 'student_attendance_list' %}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Requirements -->
+  <div class="requirements">
+    <h3 class="requirements-title">File Requirements</h3>
+    <ul class="requirements-list">
+      <li>File format must be .xlsx or .xls</li>
+      <li>Include student IDs in the first column</li>
+      <li>Include dates in the first row</li>
+      <li>Use 'P' for present and 'A' for absent</li>
+      <li>Maximum file size: 10MB</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

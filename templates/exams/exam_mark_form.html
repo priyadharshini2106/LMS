@@ -1,0 +1,277 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <style>
+    :root{
+      --brand1:#7F7FD5; --brand2:#86A8E7; --brand3:#91EAE4;
+      --ink:#1a1f36; --muted:#6b7280; --line:#e5e7eb; --bg:#ffffff;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, var(--brand1) 0%, var(--brand2) 50%, var(--brand3) 100%);
+      display: flex; align-items: flex-start; justify-content: center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      padding: 22px 16px;
+    }
+
+    /* ---------- Page container ---------- */
+    .page {
+      width: min(1200px, 98vw);
+      display: grid; gap: 16px;
+    }
+
+    /* ---------- Card ---------- */
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 10px 20px rgba(17, 38, 146, .06), 0 6px 10px rgba(17, 38, 146, .04);
+    }
+    .card-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid #edf0f5;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+    }
+    .card-title { margin:0; font-weight:800; font-size:1.5rem; color:var(--ink); }
+    .card-body { padding: 16px 18px; }
+
+    /* ---------- Filter row ---------- */
+    .filters { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+    @media (max-width: 720px){ .filters{ grid-template-columns: 1fr; } }
+    .label { font-size:.92rem; font-weight:600; color:#1f2937; margin-bottom:6px; }
+    .select, .input, .textarea {
+      width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:#fff;
+      font-size:.95rem; transition:border-color .2s, box-shadow .2s;
+    }
+    .select:focus, .input:focus, .textarea:focus {
+      outline:0; border-color:var(--brand1); box-shadow:0 0 0 3px rgba(127,127,213,.22);
+    }
+
+    /* ---------- Students box ---------- */
+    .students-box .table { margin:0; }
+    .students-box .table thead th {
+      position: sticky; top: 0; background: #f8fafc; z-index: 1;
+    }
+
+    /* ---------- Bulk container (partial injects here) ---------- */
+    .bulk-container { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <div class="card">
+      <div class="card-head">
+        <h2 class="card-title">{{ title }}</h2>
+      </div>
+      <div class="card-body">
+        <!-- ---------- Filters (Section → Term → Subject) ---------- -->
+        <div class="filters">
+          <div>
+            <div class="label">Class Section</div>
+            <select id="f_section" class="select">
+              <option value="">— Select —</option>
+              {% for s in sections %}
+                <option value="{{ s.id }}">{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <div class="label">Term</div>
+            <select id="f_term" class="select">
+              <option value="">— Select —</option>
+              {% for t in terms %}
+                <option value="{{ t.id }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <div class="label">Subject</div>
+            <select id="f_subject" class="select">
+              <option value="">Select class first</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Students for selected section -->
+        <div id="studentWrap" class="students-box mt-3"></div>
+
+        <!-- AJAX-loaded bulk table goes here -->
+        <div id="bulkWrap" class="bulk-container"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const csrftoken  = "{{ csrftoken }}";
+  const $          = (id) => document.getElementById(id);
+
+  // Filter selects
+  const fSection = $("f_section");
+  const fTerm    = $("f_term");
+  const fSubject = $("f_subject");
+
+  // Containers
+  const studentWrap = $("studentWrap");
+  const bulkWrap    = $("bulkWrap");
+
+  /* ---------- Students box ---------- */
+  function renderStudentsBox(payload){
+    const { section, students } = payload || { section: "", students: [] };
+    if (!section) { studentWrap.innerHTML = ""; return; }
+
+    if (!students.length) {
+      studentWrap.innerHTML = `
+        <div class="alert alert-warning py-2 mb-0">
+          No students found for <strong>${section}</strong>.
+        </div>`;
+      return;
+    }
+
+    const rows = students.map(s => `
+      <tr>
+        <td style="width:120px;">${s.roll_no || ""}</td>
+        <td>${s.name}</td>
+      </tr>`).join("");
+
+    studentWrap.innerHTML = `
+      <div class="mb-1"><strong>Section:</strong> ${section}</div>
+      <div style="max-height:35vh; overflow:auto;">
+        <table class="table table-sm">
+          <thead><tr><th style="width:120px;">Roll</th><th>Student</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  async function loadStudents() {
+    const sec = fSection.value;
+    if (!sec) { studentWrap.innerHTML = ""; return; }
+    const url = "{% url 'exams:ajax_students_for_section' %}?class_section=" + encodeURIComponent(sec);
+    const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }});
+    const data = await res.json();
+    renderStudentsBox(data);
+  }
+
+  /* ---------- Subjects dropdown for filter ---------- */
+  async function loadSubjects() {
+    const sec = fSection.value;
+    fSubject.innerHTML = '<option value="">Loading…</option>';
+    if (!sec) { fSubject.innerHTML = '<option value="">Select class first</option>'; return; }
+
+    const url = "{% url 'exams:ajax_subjects_for_class' %}?class_level=" + encodeURIComponent(sec);
+    const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    const data = await res.json();
+
+    fSubject.innerHTML = '<option value="">— Select —</option>';
+    data.forEach(row => {
+      const opt = document.createElement("option");
+      opt.value = row.id;
+      opt.textContent = row.name;
+      fSubject.appendChild(opt);
+    });
+  }
+
+  // --- Marks color helpers ---
+  function colorizeMarksInput(inputEl, threshold = 35) {
+    if (!inputEl) return;
+    const v = parseFloat(inputEl.value);
+    inputEl.classList.remove('input-pass', 'input-fail');
+    if (isNaN(v)) return;
+    if (v >= threshold) inputEl.classList.add('input-pass');
+    else inputEl.classList.add('input-fail');
+  }
+  function colorizeAllMarks(threshold = 35) {
+    bulkWrap.querySelectorAll('input[name$="-marks_obtained"]').forEach(inp => {
+      colorizeMarksInput(inp, threshold);
+    });
+  }
+
+  /* ---------- Bulk table (marks) ---------- */
+  async function loadBulkTable() {
+    const sec = fSection.value, term = fTerm.value, sub = fSubject.value;
+    if (!sec || !term || !sub) { bulkWrap.innerHTML = ""; return; }
+
+    const url = "{% url 'exams:bulk_mark_table' %}" +
+      `?class_section=${encodeURIComponent(sec)}&term=${encodeURIComponent(term)}&subject=${encodeURIComponent(sub)}`;
+
+    const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    bulkWrap.innerHTML = await res.text();
+
+    // Wire the injected form submit (AJAX)
+    const form = bulkWrap.querySelector("#bulk-mark-form");
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        fd.append("class_section", fSection.value);
+        fd.append("term", fTerm.value);
+        fd.append("subject", fSubject.value);
+        const res = await fetch("{% url 'exams:bulk_mark_table' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" },
+          body: fd
+        });
+        const json = await res.json();
+
+        // If you want to redirect after save:
+        if (json.ok) {
+          const afterUrl = (bulkWrap.querySelector('#bulk-mark-form')?.dataset.afterSaveUrl) || "{% url 'exams:exam_mark_list' %}";
+          window.location.href = afterUrl;
+          return;
+        }
+
+        // Otherwise re-render with errors
+        bulkWrap.innerHTML = json.html;
+        colorizeAllMarks();
+      });
+    }
+
+    // When schedule changes inside table, copy its data-max-marks to the row's max input
+    bulkWrap.addEventListener('change', (e) => {
+      if (!e.target.classList.contains('exam-schedule-select')) return;
+      const selected = e.target.options[e.target.selectedIndex];
+      const maxMarks = selected ? selected.getAttribute('data-max-marks') : null;
+      const row = e.target.closest('tr');
+      const maxInput = row ? row.querySelector('input[name$="-max_marks"]') : null;
+      if (maxMarks && maxInput) maxInput.value = maxMarks;
+    }, { once: true }); // attach once per load to avoid duplicates
+
+    // Live update coloring when user types/changes marks
+    bulkWrap.addEventListener('input', (e) => {
+      if (e.target.matches('input[name$="-marks_obtained"]')) {
+        colorizeMarksInput(e.target, 35);
+      }
+    });
+    bulkWrap.addEventListener('change', (e) => {
+      if (e.target.matches('input[name$="-marks_obtained"]')) {
+        colorizeMarksInput(e.target, 35);
+      }
+    });
+
+    // Initial coloring on render
+    colorizeAllMarks();
+  }
+
+  /* ---------- Events ---------- */
+  fSection.addEventListener("change", async () => {
+    await loadStudents();
+    await loadSubjects();
+    await loadBulkTable();
+  });
+  fTerm.addEventListener("change", loadBulkTable);
+  fSubject.addEventListener("change", loadBulkTable);
+
+  // Initial
+  if (fSection && fSection.value) {
+    loadStudents();
+    loadSubjects();
+  }
+</script>
+</body>
+</html>

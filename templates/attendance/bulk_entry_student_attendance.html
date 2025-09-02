@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center text-primary mb-4">📘 Student Attendance Entry</h2>
+
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+      <label for="classSelect" class="form-label">Class</label>
+      <select name="class_name" id="classSelect" class="form-select">
+        {% for class in class_list %}
+          <option value="{{ class }}" {% if class == selected_class %}selected{% endif %}>{{ class }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label for="sectionSelect" class="form-label">Section</label>
+      <select name="section" id="sectionSelect" class="form-select">
+        {% for section in section_list %}
+          <option value="{{ section }}" {% if section == selected_section %}selected{% endif %}>{{ section }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary w-100">📂 Load Students</button>
+    </div>
+  </form>
+
+  {% if students %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="dateInput" class="form-label">Attendance Date</label>
+      <input type="date" name="date" id="dateInput" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle text-center">
+        <thead class="table-light">
+          <tr>
+            <th>Admission Number</th>
+            <th>Roll No</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          <tr>
+            <td>{{ student.admission_number }}</td>
+            <td>{{ student.roll_no }}</td>
+            <td>{{ student.name }}</td>
+            <td>
+              <div class="d-flex justify-content-center gap-2">
+                {% for code, label in attendance_choices %}
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="status_{{ student.id }}" id="status_{{ student.id }}_{{ forloop.counter }}" value="{{ code }}" {% if code == 'Present' %}checked{% endif %}>
+                    <label class="form-check-label" for="status_{{ student.id }}_{{ forloop.counter }}">{{ label }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+            </td>
+            <td><input type="text" class="form-control" name="remarks_{{ student.id }}" value="Nil"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3">✅ Submit Attendance</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

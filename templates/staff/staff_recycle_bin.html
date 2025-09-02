@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Staff Recycle Bin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fff8e1;
+      padding: 30px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #ff6f00;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 4px;
+      text-decoration: none;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .btn-warning { background-color: #ff9800; color: white; }
+    .btn-primary { background-color: #1e88e5; color: white; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background-color: #ffa000;
+      color: white;
+    }
+
+    img.staff-photo {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🗑 Recycle Bin - Deleted Staff</h2>
+
+<div style="margin-bottom: 20px;">
+  <a href="{% url 'staff_list' %}" class="btn btn-primary">⬅️ Back to Staff List</a>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Staff ID</th>
+      <th>Photo</th>
+      <th>Name</th>
+      <th>Designation</th>
+      <th>Restore</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for staff in staff %}
+    <tr>
+      <td>{{ staff.staff_id }}</td>
+      <td>
+        {% if staff.photo %}
+          <img src="{{ staff.photo.url }}" class="staff-photo">
+        {% else %}
+          No Photo
+        {% endif %}
+      </td>
+      <td>{{ staff.full_name }}</td>
+      <td>{{ staff.get_designation_display }}</td>
+      <td>
+        <a href="{% url 'undo_delete_staff' staff.pk %}" class="btn btn-warning">Undo</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No deleted staff found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+</body>
+</html>

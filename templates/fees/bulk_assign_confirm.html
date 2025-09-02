@@ -1,0 +1,64 @@
+<!-- templates/admin/bulk_assign_confirm.html -->
+{% extends "base.html" %}
+{% load static custom_tags %}
+
+{% block title %}Confirm Bulk Assignment | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+
+
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Confirm Bulk Assignment</h1>
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Assign {{ fee_structure }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="fee_id" value="{{ fee_structure.id }}">
+                
+                <div class="assignment-options">
+                    <div class="assignment-option form-check">
+                        <input class="form-check-input" type="radio" id="all" name="scope" value="all" checked>
+                        <label class="form-check-label" for="all">
+                            <strong>All {{ class_name }} students</strong> ({{ all_count }})
+                        </label>
+                    </div>
+                    
+                    <div class="assignment-option form-check">
+                        <input class="form-check-input" type="radio" id="hostellers" name="scope" value="hostellers">
+                        <label class="form-check-label" for="hostellers">
+                            <strong>Only Hostellers</strong> ({{ hosteller_count }})
+                        </label>
+                    </div>
+                    
+                    <div class="assignment-option form-check">
+                        <input class="form-check-input" type="radio" id="transport" name="scope" value="transport">
+                        <label class="form-check-label" for="transport">
+                            <strong>Transport Users</strong> ({{ transport_count }})
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn confirm-btn text-white">
+                        <i class="fas fa-check-circle"></i> Confirm Assignment
+                    </button>
+                    <a href="{% url 'admin:fees_feestructure_changelist' %}" class="btn btn-secondary">
+                        <i class="fas fa-times-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+    {{ block.super }}
+    <!-- Font Awesome for icons -->
+    <script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
+{% endblock %}

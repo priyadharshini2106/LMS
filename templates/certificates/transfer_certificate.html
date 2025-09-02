@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Transfer Certificate</title>
+  <style>
+    body {
+      font-family: 'Times New Roman', serif;
+      margin: 40px;
+      line-height: 1.6;
+    }
+    h2 {
+      text-align: center;
+      text-decoration: underline;
+    }
+    .content {
+      margin-top: 40px;
+      font-size: 18px;
+    }
+    .footer {
+      margin-top: 60px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <h2>TRANSFER CERTIFICATE</h2>
+  <div class="content">
+    This is to certify that <strong>{{ student.full_name }}</strong>, Roll No. <strong>{{ student.roll_number }}</strong>, 
+    was a bonafide student of our school in the class <strong>{{ student.class_section }}</strong>.<br><br>
+
+    He/She joined on <strong>{{ student.admission_date }}</strong> and left on <u>_________________</u>.<br>
+    His/Her conduct was found to be <u>_________________</u> during the period of stay in our institution.<br><br>
+
+    We wish him/her all success in the future.
+  </div>
+  <div class="footer">
+    <p>Principal</p>
+  </div>
+</body>
+</html>

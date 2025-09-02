@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card p-4">
+    <h4 class="text-danger">⚠️ Confirm Deletion</h4>
+    <p>Are you sure you want to delete the attendance for <strong>{{ record.student.name }}</strong> on <strong>{{ record.date }}</strong>?</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Yes, Delete</button>
+      <a href="{% url 'student_attendance_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

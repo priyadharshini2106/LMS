@@ -1,0 +1,18 @@
+<!-- templates/staff/upload_staff_excel.html -->
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Upload Staff Excel File</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="excel_file">Select Excel File:</label>
+    <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+    <button type="submit" class="btn btn-primary mt-2">Upload</button>
+  </form>
+{% endblock %}

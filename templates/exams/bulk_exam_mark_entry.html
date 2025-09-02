@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-primary mb-4">Bulk Marks Entry - {{ class_level }} | {{ term }} | {{ subject }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    <table class="table table-bordered">
+      <thead class="table-dark">
+        <tr>
+          <th>S.No</th>
+          <th>Student</th>
+          <th>Marks Obtained</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ form.instance.student.full_name }}</td>
+          <td>{{ form.marks_obtained }}</td>
+          <td>{{ form.remarks }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-success">Save Marks</button>
+  </form>
+</div>
+{% endblock %}

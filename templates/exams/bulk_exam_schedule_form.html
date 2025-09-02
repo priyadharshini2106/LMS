@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Bulk Exam Scheduling{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'exams:exam_schedule_view' %}">Exam Schedule</a></li>
+<li class="breadcrumb-item active">Bulk Create</li>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Bulk Exam Schedule</h5>
+    <a href="{% url 'exams:exam_schedule_view' %}" class="btn btn-outline-secondary">
+      Back to Schedule
+    </a>
+  </div>
+
+  <div class="card-body">
+    <form method="post" action="{% url 'exams:bulk_exam_schedule' %}" class="row g-3">
+      {% csrf_token %}
+
+      <div class="col-md-4">
+        <label class="form-label">Class Level</label>
+        <select name="class_level" class="form-select" required>
+          <option value="" selected disabled>— Select —</option>
+          {% for cl in class_levels %}
+            <option value="{{ cl.id }}">{{ cl }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Term</label>
+        <select name="term" class="form-select" required>
+          <option value="" selected disabled>— Select —</option>
+          {% for t in terms %}
+            <option value="{{ t.id }}">{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Exam Type</label>
+        <select name="exam_type" class="form-select" required>
+          <option value="" selected disabled>— Select —</option>
+          {% for et in exam_types %}
+            <option value="{{ et.id }}">{{ et.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Start Date</label>
+        <input type="date" name="start_date" class="form-control" required>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Exams per Day</label>
+        <input type="number" name="exams_per_day" class="form-control" min="1" value="1" required>
+      </div>
+
+      <div class="col-md-4 d-flex align-items-end">
+        <div class="form-check me-4">
+          <input class="form-check-input" type="checkbox" name="skip_weekends" id="skip_weekends">
+          <label class="form-check-label" for="skip_weekends">Skip Weekends</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="overwrite_existing" id="overwrite_existing">
+          <label class="form-check-label" for="overwrite_existing">Overwrite Existing</label>
+        </div>
+      </div>
+
+      <div class="col-12 d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">Create Schedule</button>
+        <a href="{% url 'exams:exam_schedule_view' %}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
